@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Science Simulation – Force &amp; Motion</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+  <!-- ROTATE OVERLAY -->
+  <div class="rotate-overlay" id="rotateOverlay">
+    <div class="rotate-box">
+      <div class="rotate-icon">⟳</div>
+      <p>Please rotate your device to landscape mode for the best experience.</p>
+    </div>
+  </div>
+  
+  <!-- PAGE 1 — HOME -->
+  <div class="page active" id="page-home">
+
+    <div class="bg-layer">
+      <video class="bg-img" src="icon/Force Motion-Index_3.mp4" autoplay loop muted playsinline></video>
+    </div>
+
+    <div class="top-left-icons">
+      <button class="icon-btn" aria-label="Music">
+        <img src="icon/Music.png" alt="Music" />
+      </button>
+      <button class="icon-btn" aria-label="Info">
+        <img src="icon/info.png" alt="Info" />
+      </button>
+    </div>
+
+    <div class="top-right-icons">
+      <img src="icon/logo.png" alt="Macmillan Education" class="logo-img" />
+      <button class="icon-btn" aria-label="Fullscreen">
+        <img src="icon/Expend.png" alt="Fullscreen" />
+      </button>
+    </div>
+
+    <div class="center-content">
+
+      <div class="title-wrap">
+        <img src="icon/Science.png" alt="Science" class="title-img" />
+        <img src="icon/Simulation.png" alt="Simulation" class="title-img" />
+      </div>
+
+      <div class="badge-wrap">
+        <img src="icon/Force&Motion.png" alt="Force and Motion" class="badge-img" />
+      </div>
+
+      <button class="play-btn" id="playBtn" aria-label="Play">
+        <img src="icon/Play1.png" alt="Play" class="play-img" />
+      </button>
+
+    </div>
+
+    <div class="copyright">Copyright &copy; 2027 Macmillan Education India Private Limited. All rights reserved.</div>
+  </div>
+
+
+  <!-- PAGE 2 — INDEX -->
+  <div class="page" id="page-index">
+
+<div class="bg-layer">
+      <video class="bg-img" src="icon/Force Motion-Index_3.mp4" autoplay loop muted playsinline></video>
+    </div>
+
+    <div class="top-left-icons">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <img src="icon/back.png" alt="Back" />
+      </button>
+      <button class="icon-btn" aria-label="Music">
+        <img src="icon/Music.png" alt="Music" />
+      </button>
+      <button class="icon-btn" aria-label="Info">
+        <img src="icon/Info.png" alt="Info" />
+      </button>
+    </div>
+
+    <div class="top-right-icons">
+      <img src="icon/logo.png" alt="Macmillan Education" class="logo-img" />
+      <button class="icon-btn" aria-label="Fullscreen">
+        <img src="icon/Expend.png" alt="Fullscreen" />
+      </button>
+    </div>
+
+    <div class="menu-content">
+
+      <button class="menu-btn menu-btn--top" aria-label="Force">
+        <img src="icon/Force.png" alt="Force" />
+      </button>
+
+      <div class="menu-row">
+        <button class="menu-btn menu-btn--half" aria-label="Motion">
+          <img src="icon/Motion.png" alt="Motion" />
+        </button>
+        <button class="menu-btn menu-btn--half" aria-label="Push/Pull">
+          <img src="icon/Puash&Pull.png" alt="Push Pull" />
+        </button>
+      </div>
+
+    </div>
+
+    <div class="copyright">Copyright &copy; 2027 Macmillan Education India Private Limited. All rights reserved.</div>
+  </div>
+
+
+  <!-- PAGE 3 — FORCE -->
+<div class="page" id="page-force">
+
+  <!-- NAV BAR -->
+ <div class="force-nav">
+
+  <!-- OUTER BLUE BAR -->
+  <div class="force-nav__outer"></div>
+
+  <!-- NAV IMAGE + ALL ICONS INSIDE -->
+  <div class="force-nav__inner">
+    <img src="icon/nav-img.png" alt="" class="force-nav__bg" />
+
+    <div class="force-nav__left">
+      <button class="icon-btn" id="forceBackBtn" aria-label="Back">
+        <img src="icon/back.png" alt="Back" />
+      </button>
+      <button class="icon-btn" aria-label="Music">
+        <img src="icon/Music.png" alt="Music" />
+      </button>
+      <button class="icon-btn" aria-label="Info">
+        <img src="icon/info.png" alt="Info" />
+      </button>
+    </div>
+
+    <div class="force-nav__center">
+      <img src="icon/Force2.png" alt="Force" class="force-nav__title" />
+    </div>
+
+    <div class="force-nav__right">
+      <img src="icon/logo.png" alt="Macmillan Education" class="logo-img" />
+      <button class="icon-btn" aria-label="Fullscreen">
+        <img src="icon/Expend.png" alt="Fullscreen" />
+      </button>
+    </div>
+  </div>
+
+</div>
+
+  <!-- MAIN AREA -->
+ <div class="force-main">
+
+    <!-- INSTRUCTION TEXT -->
+<div class="force-instruction">
+  <div class="instr-row">
+    <span class="instr-line instr-line1">Let's get started!</span>
+    <button class="instr-audio-btn" id="audioBtn1" aria-label="Audio">
+      <img src="icon/audio.png" alt="Audio" />
+    </button>
+  </div>
+  <div class="instr-row">
+    <span class="instr-line instr-line2">Can you make the blocks fall using the given object?</span>
+    <button class="instr-audio-btn" id="audioBtn2" aria-label="Audio">
+      <img src="icon/audio.png" alt="Audio" />
+    </button>
+  </div>
+  <div class="instr-row">
+    <span class="instr-line instr-line3"><strong>Pick the force you need and tap to try!</strong></span>
+    <button class="instr-audio-btn" id="audioBtn3" aria-label="Audio">
+      <img src="icon/audio.png" alt="Audio" />
+    </button>
+  </div>
+</div>
+
+    <!-- TWO SELECTION CARDS -->
+    <div class="force-cards">
+
+      <!-- CARD 1: CHOOSE OBJECT -->
+      <div class="force-card">
+        <img src="icon/Asset1@4x.png" alt="" class="force-card__frame" />
+        <div class="force-card__inner">
+          <img src="icon/Asset3@4x.png" alt="Choose Object" class="force-card__header" />
+          <div class="force-card__objects">
+            <button class="obj-btn" data-object="ball" aria-label="Ball">
+              <img src="icon/ball.png" alt="Ball" />
+            </button>
+            <button class="obj-btn" data-object="trolly" aria-label="Trolley">
+              <img src="icon/trolly.png" alt="Trolley" />
+            </button>
+            <button class="obj-btn" data-object="box" aria-label="Box">
+              <img src="icon/box.png" alt="Box" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: CHOOSE FORCE -->
+      <div class="force-card">
+        <img src="icon/Asset1@4x.png" alt="" class="force-card__frame" />
+        <div class="force-card__inner">
+          <img src="icon/Asset5@4x.png" alt="Choose Force" class="force-card__header" />
+          <div class="force-card__forces">
+            <button class="force-type-btn" data-force="gentle" aria-label="Gentle Force">
+              <img src="icon/Gentle.png" alt="Gentle Force" />
+            </button>
+            <button class="force-type-btn" data-force="strong" aria-label="Strong Force">
+              <img src="icon/strong.png" alt="Strong Force" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+<!-- PLAY CARD — third card in same row -->
+      <div class="force-play-card">
+      <img src="icon/Asset1@4x.png" alt="" class="force-card__frame" />
+      <div class="force-card__inner">
+        <img src="icon/Asset4@4x.png" alt="Play" class="force-card__header" />
+        <div class="force-card__forces">
+          <button class="play-force-btn" id="playForceBtn" aria-label="Play">
+            <img src="icon/Play.png" alt="Play" />
+          </button>
+</div>
+      </div>
+    </div>
+
+    </div><!-- /.force-cards -->
+
+<!-- SIMULATION TRACK -->
+  <div class="force-track">
+      <div class="force-track__content">
+        <!-- BOY + OBJECT -->
+        <div class="track-left">
+          <img src="icon/KICK/Final00.png" alt="Boy" class="track-boy" />
+          <img src="icon/ball.png" alt="Ball" class="track-object" id="trackObject" />
+        </div>
+
+        <!-- BLOCKS STACK -->
+  <div class="track-right">
+          <div class="blocks-stack">
+           <div class="blocks-row blocks-row--top">
+  <img src="icon/1.png" alt="Block" class="block-img block-t1" />
+</div>
+          <div class="blocks-row blocks-row--middle">
+  <img src="icon/4.png" alt="Block" class="block-img block-m1" />
+  <img src="icon/3.png" alt="Block" class="block-img block-m2" />
+</div>
+          <div class="blocks-row blocks-row--bottom">
+  <img src="icon/1.png" alt="Block" class="block-img block-b1" />
+  <img src="icon/2.png" alt="Block" class="block-img block-b2" />
+  <img src="icon/4.png" alt="Block" class="block-img block-b3" />
+</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.force-track -->
+
+</div><!-- /.force-main -->
+
+</div><!-- /#page-force -->
+
+  <script src="./js/script.js"></script>
+</body>
+</html>
