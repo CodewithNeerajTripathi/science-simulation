@@ -572,6 +572,183 @@ margin-top: clamp(4px, 0.8vh, 10px);
   transform: scale(1.05);
 }
 
+
+
+
+
+
+/* ════════════════════════════════════════════
+   STEP-BY-STEP GUIDE GLOW + MESSAGE BOX
+════════════════════════════════════════════ */
+
+.force-card__frame.step-glow,
+.force-card .force-card__frame.step-glow,
+.force-play-card .force-card__frame.step-glow {
+  filter: drop-shadow(0 0 4px rgba(0, 180, 255, 0.95)) drop-shadow(0 0 10px rgba(0, 180, 255, 0.6));
+}
+
+.step-msg {
+  position: absolute;
+  background: #ffffff;
+  color: #2d4791;
+  font-family: 'Comic', Arial, sans-serif;
+  font-weight: 900;
+  font-size: clamp(0.5rem, 2.5vw, 2.4rem);
+  padding: clamp(6px, 1vh, 12px) clamp(16px, 3vw, 20px);
+  border-radius: clamp(8px, 1.5vw, 16px);
+  border: clamp(2px, 0.3vw, 3px) solid #2d8fd6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  white-space: nowrap;
+  min-height: clamp(38px, 6vh, 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+/* CARD 1 — message on LEFT side, arrow pointing right toward card */
+#card1 .step-msg {
+  top: 50%;
+  right: calc(100% + clamp(14px, 2vw, 24px));
+  left: auto;
+  transform: translateY(-50%);
+}
+#card1 .step-msg::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-width: clamp(8px, 1.2vw, 12px) 0 clamp(8px, 1.2vw, 12px) clamp(8px, 1.2vw, 12px);
+  border-style: solid;
+  border-color: transparent transparent transparent #2d8fd6;
+}
+#card1 .step-msg::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(100% - 2px);
+  transform: translateY(-50%);
+  border-width: 8px 0 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent transparent #ffffff;
+}
+
+/* CARD 2 — message on BOTTOM, arrow pointing up toward card */
+#card2 .step-msg {
+  top: calc(100% + clamp(14px, 2vw, 24px));
+  left: 50%;
+  transform: translateX(-50%);
+}
+#card2 .step-msg::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 clamp(8px, 1.2vw, 12px) clamp(8px, 1.2vw, 12px) clamp(8px, 1.2vw, 12px);
+  border-style: solid;
+  border-color: transparent transparent #2d8fd6 transparent;
+}
+#card2 .step-msg::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent #ffffff transparent;
+}
+
+/* CARD 3 — message on RIGHT side, arrow pointing left toward card */
+#card3 .step-msg {
+  top: 50%;
+  left: calc(100% + clamp(14px, 2vw, 24px));
+  transform: translateY(-50%);
+}
+#card3 .step-msg::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-width: clamp(8px, 1.2vw, 12px) clamp(8px, 1.2vw, 12px) clamp(8px, 1.2vw, 12px) 0;
+  border-style: solid;
+  border-color: transparent #2d8fd6 transparent transparent;
+}
+#card3 .step-msg::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: calc(100% - 2px);
+  transform: translateY(-50%);
+  border-width: 8px 8px 8px 0;
+  border-style: solid;
+  border-color: transparent #ffffff transparent transparent;
+}
+
+.step-msg.msg-visible {
+  opacity: 1;
+}
+
+@keyframes msgNudgeX {
+  0%, 100% { margin-right: 0; }
+  50% { margin-right: 10px; }
+}
+
+@keyframes msgNudgeXReverse {
+  0%, 100% { margin-left: 0; }
+  50% { margin-left: 10px; }
+}
+
+@keyframes msgNudgeY {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: 10px; }
+}
+
+/* card1: message on left, nudges left-right toward card */
+#card1 .step-msg.msg-visible {
+  animation: msgNudgeXReverse 0.8s ease-in-out infinite;
+}
+
+/* card2: message on bottom, nudges up-down toward card */
+#card2 .step-msg.msg-visible {
+  animation: msgNudgeY 0.8s ease-in-out infinite;
+}
+
+/* card3: message on right, nudges left-right toward card */
+#card3 .step-msg.msg-visible {
+  animation: msgNudgeX 0.8s ease-in-out infinite;
+}
+
+
+/* ════════════════════════════════════════════
+   SPOTLIGHT FOCUS SYSTEM
+════════════════════════════════════════════ */
+
+.force-card,
+.force-play-card {
+  transition: filter 0.35s ease, transform 0.35s ease, opacity 0.35s ease;
+}
+
+.spotlight-dim {
+  filter: blur(4px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.spotlight-active {
+  filter: none;
+  opacity: 1;
+}
+
+.spotlight-active.card-confirming {
+  transform: scale(1.06);
+}
+
 /* ── SIMULATION TRACK ── */
 .force-track {
   position: relative;
@@ -901,4 +1078,244 @@ margin-top: clamp(4px, 0.8vh, 10px);
   .force-cards { gap: clamp(6px, 2vw, 24px); }
   .force-card { width: clamp(100px, 18vw, 200px); }
   .force-instruction { font-size: clamp(0.55rem, 1.2vw, 0.8rem); }
+}
+
+
+
+
+
+/* ════════════════════════════════════════════
+   PAGE 4 — MOTION
+════════════════════════════════════════════ */
+
+#page-motion {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.motion-main {
+  justify-content: center;
+  gap: clamp(10px, 2vh, 24px);
+  padding-top: clamp(10px, 2vh, 30px);
+  background-color: #ffffff;
+  background-image: none;
+}
+
+.motion-instruction {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  font-family: 'Comic', Arial, sans-serif;
+  font-size: clamp(0.5rem, 2.5vw, 2.4rem) !important;
+  font-weight: 900;
+  color: #2d4791;
+  line-height: 1.4;
+  margin-top: clamp(4px, 0.8vh, 10px);
+  margin-bottom: clamp(2px, 0.4vh, 5px);
+  padding: clamp(6px, 1vh, 12px) clamp(16px, 3vw, 40px);
+  flex-shrink: 0;
+  width: clamp(600px, 96vw, 1500px);
+  min-height: clamp(38px, 10vh, 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.motion-instruction__bg {
+  position: absolute;
+  inset: -10% -2%;
+  width: 104%;
+  height: 120%;
+  object-fit: fill;
+  z-index: 0;
+}
+
+.motion-instruction__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 1.5vh, 18px) clamp(16px, 3vw, 40px);
+}
+
+.motion-instruction .instr-row {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 100%;
+  white-space: nowrap;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.2vw, 14px);
+}
+
+.motion-instruction .instr-line {
+  font-family: 'Comic', Arial, sans-serif;
+  font-weight: 900;
+  color: #2d4791;
+  font-size: clamp(0.5rem, 2.5vw, 2.4rem);
+}
+
+.motion-cards {
+  display: flex;
+  gap: clamp(10px, 4vw, 60px);
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  flex: 1;
+  padding: clamp(8px, 2vh, 20px) clamp(8px, 2vw, 30px);
+}
+
+.motion-card {
+  position: relative;
+  width: clamp(280px, 46vw, 780px);
+  max-width: 60%;
+  aspect-ratio: 4 / 3;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.motion-card:hover  { transform: scale(1.03); }
+.motion-card:active { transform: scale(0.97); }
+
+.motion-card.selected {
+  filter: drop-shadow(0 0 10px rgba(0,200,255,0.9));
+}
+
+.motion-card.wrong {
+  filter: drop-shadow(0 0 10px rgba(255,60,60,0.9));
+}
+
+.motion-card__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 0;
+}
+
+.motion-card__inner {
+  position: absolute;
+  inset: 6% 4% 8%;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: clamp(6px, 1vw, 14px);
+}
+
+.motion-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-height: 440px) and (orientation: landscape) {
+  .motion-instruction { font-size: clamp(0.5rem, 1vw, 0.7rem) !important; min-height: clamp(28px, 5vh, 44px); }
+  .motion-instruction .instr-line { font-size: clamp(0.45rem, 1.1vw, 0.7rem); }
+  .motion-cards { gap: clamp(6px, 2vw, 24px); }
+}
+
+@media (max-width: 820px) and (orientation: portrait) {
+  .motion-cards {
+    flex-direction: column;
+    gap: clamp(10px, 2vh, 24px);
+  }
+  .motion-card {
+    width: clamp(220px, 70vw, 420px);
+    max-width: 90%;
+  }
+  .motion-instruction .instr-line { font-size: clamp(0.6rem, 2.6vw, 1rem); }
+}
+
+
+
+
+/* ════════════════════════════════════════════
+   PAGE 5 — PUSH AND PULL
+════════════════════════════════════════════ */
+
+#page-pushpull {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+#page-pushpull .motion-cards {
+  flex-direction: column;
+  gap: clamp(10px, 2vh, 24px);
+}
+
+.pp-scene {
+  position: relative;
+  width: clamp(320px, 78vw, 1050px);
+  max-width: 92%;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+}
+.pp-scene__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.pp-answers {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100vw;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 clamp(60px, 12vw, 220px);
+  pointer-events: none;
+}
+
+.pp-answers .pp-answer-btn {
+  pointer-events: all;
+}
+
+.pp-answer-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s;
+  padding: 0;
+}
+
+.pp-answer-btn img {
+  width: clamp(100px, 16vw, 220px);
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.pp-answer-btn:hover  { transform: scale(1.06); }
+.pp-answer-btn:active { transform: scale(0.94); }
+
+.pp-answer-btn.selected {
+  filter: drop-shadow(0 0 10px rgba(0,200,255,0.9));
+}
+
+.pp-answer-btn.wrong {
+  filter: drop-shadow(0 0 10px rgba(255,60,60,0.9));
+}
+
+@media (max-width: 820px) and (orientation: portrait) {
+  .pp-scene { width: clamp(220px, 86vw, 600px); }
+  .pp-answers { gap: clamp(14px, 8vw, 60px); }
+  .pp-answer-btn img { width: clamp(80px, 22vw, 160px); }
 }

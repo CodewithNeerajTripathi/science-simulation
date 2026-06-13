@@ -174,8 +174,9 @@
     <!-- TWO SELECTION CARDS -->
     <div class="force-cards">
 
-      <!-- CARD 1: CHOOSE OBJECT -->
-      <div class="force-card">
+  <!-- CARD 1: CHOOSE OBJECT -->
+      <div class="force-card" id="card1">
+        <div class="step-msg" id="msgCard1">Select the object</div>
         <img src="icon/Asset1@4x.png" alt="" class="force-card__frame" />
         <div class="force-card__inner">
           <img src="icon/Asset3@4x.png" alt="Choose Object" class="force-card__header" />
@@ -193,8 +194,9 @@
         </div>
       </div>
 
-      <!-- CARD 2: CHOOSE FORCE -->
-      <div class="force-card">
+  <!-- CARD 2: CHOOSE FORCE -->
+      <div class="force-card" id="card2">
+        <div class="step-msg" id="msgCard2">Pick a force</div>
         <img src="icon/Asset1@4x.png" alt="" class="force-card__frame" />
         <div class="force-card__inner">
           <img src="icon/Asset5@4x.png" alt="Choose Force" class="force-card__header" />
@@ -210,7 +212,7 @@
       </div>
 
 <!-- PLAY CARD — third card in same row -->
-      <div class="force-play-card">
+      <div class="force-play-card" id="card3">
       <img src="icon/Asset1@4x.png" alt="" class="force-card__frame" />
       <div class="force-card__inner">
         <img src="icon/Asset4@4x.png" alt="Play" class="force-card__header" />
@@ -258,6 +260,157 @@
 
 </div><!-- /#page-force -->
 
+<!-- PAGE 4 — MOTION -->
+<div class="page" id="page-motion">
+
+  <div class="force-nav">
+    <div class="force-nav__outer"></div>
+    <div class="force-nav__inner">
+      <img src="icon/nav-img.png" alt="" class="force-nav__bg" />
+
+      <div class="force-nav__left">
+        <button class="icon-btn" id="motionBackBtn" aria-label="Back">
+          <img src="icon/back.png" alt="Back" />
+        </button>
+        <button class="icon-btn" aria-label="Music">
+          <img src="icon/Music.png" alt="Music" />
+        </button>
+        <button class="icon-btn" aria-label="Info">
+          <img src="icon/info.png" alt="Info" />
+        </button>
+      </div>
+
+      <div class="force-nav__center">
+        <img src="icon/Motion2.png" alt="Motion" class="force-nav__title" />
+      </div>
+
+      <div class="force-nav__right">
+        <img src="icon/logo.png" alt="Macmillan Education" class="logo-img" />
+        <button class="icon-btn" aria-label="Fullscreen">
+          <img src="icon/Expend.png" alt="Fullscreen" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="force-main motion-main">
+
+    <div class="force-instruction motion-instruction">
+      <img src="icon/text-bg.png" alt="" class="motion-instruction__bg" />
+      <div class="motion-instruction__content">
+        <div class="instr-row">
+          <span class="instr-line instr-line1">Can you spot what's happening?</span>
+        </div>
+        <div class="instr-row">
+          <span class="instr-line instr-line2">Look closely and choose the right option.</span>
+          <button class="instr-audio-btn" id="motionAudioBtn1" aria-label="Audio">
+            <img src="icon/audio.png" alt="Audio" />
+          </button>
+        </div>
+        <div class="instr-row">
+          <span class="instr-line instr-line3" id="motionQuestionLine"><strong></strong></span>
+          <button class="instr-audio-btn" id="motionAudioBtn2" aria-label="Audio">
+            <img src="icon/audio.png" alt="Audio" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="motion-cards" id="motionCards">
+
+   <button class="motion-card" id="motionCardA" data-answer="moving">
+        <img src="" alt="Moving" class="motion-card__img" id="motionGifImg" />
+      </button>
+
+      <button class="motion-card" id="motionCardB" data-answer="not-moving">
+        <img src="" alt="Not moving" class="motion-card__img" id="motionStaticImg" />
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="copyright">Copyright &copy; 2027 Macmillan Education India Private Limited. All rights reserved.</div>
+</div><!-- /#page-motion -->
+
+<!-- PAGE 5 — PUSH AND PULL -->
+<div class="page" id="page-pushpull">
+
+  <div class="force-nav">
+    <div class="force-nav__outer"></div>
+    <div class="force-nav__inner">
+      <img src="icon/nav-img.png" alt="" class="force-nav__bg" />
+
+      <div class="force-nav__left">
+        <button class="icon-btn" id="pushpullBackBtn" aria-label="Back">
+          <img src="icon/back.png" alt="Back" />
+        </button>
+        <button class="icon-btn" aria-label="Music">
+          <img src="icon/Music.png" alt="Music" />
+        </button>
+        <button class="icon-btn" aria-label="Info">
+          <img src="icon/info.png" alt="Info" />
+        </button>
+      </div>
+
+      <div class="force-nav__center">
+        <img src="icon/PushPull2.png" alt="Push and Pull" class="force-nav__title" />
+      </div>
+
+      <div class="force-nav__right">
+        <img src="icon/logo.png" alt="Macmillan Education" class="logo-img" />
+        <button class="icon-btn" aria-label="Fullscreen">
+          <img src="icon/Expend.png" alt="Fullscreen" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="force-main motion-main">
+
+    <div class="force-instruction motion-instruction">
+      <!-- <img src="icon/text-bg.png" alt="" class="motion-instruction__bg" /> -->
+      <div class="motion-instruction__content">
+        <div class="instr-row">
+          <span class="instr-line instr-line1">Be a motion detective!</span>
+        </div>
+        <div class="instr-row">
+          <span class="instr-line instr-line2">Look carefully and tap your choice!</span>
+          <button class="instr-audio-btn" id="ppAudioBtn1" aria-label="Audio">
+            <img src="icon/audio.png" alt="Audio" />
+          </button>
+        </div>
+        <div class="instr-row">
+          <span class="instr-line instr-line3" id="ppQuestionLine"><strong></strong></span>
+          <button class="instr-audio-btn" id="ppAudioBtn2" aria-label="Audio">
+            <img src="icon/audio.png" alt="Audio" />
+          </button>
+        </div>
+      </div>
+    </div>
+<div class="motion-cards" id="ppCards">
+
+      <div class="pp-scene">
+        <img src="" alt="Scene" class="pp-scene__img" id="ppSceneImg" />
+
+        <div class="pp-answers">
+          <button class="pp-answer-btn" id="ppPushBtn" data-answer="push">
+            <img src="icon/push.png" alt="Push" />
+          </button>
+          <button class="pp-answer-btn" id="ppPullBtn" data-answer="pull">
+            <img src="icon/pull.png" alt="Pull" />
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="copyright">Copyright &copy; 2027 Macmillan Education India Private Limited. All rights reserved.</div>
+</div><!-- /#page-pushpull -->
+
+<audio id="clapSound" src="audio/claping.mp3" preload="auto"></audio>
   <script src="./js/script.js"></script>
 </body>
 </html>
