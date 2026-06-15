@@ -644,8 +644,15 @@ if (idleAudioInterval) {
 
   /* update track object */
      if (trackObject) {
-  trackObject.src = `icon/${obj}.png`;
+ trackObject.src = `icon/${obj}.png`;
   trackObject.className = 'track-object obj-' + obj;
+  if (trackBoy) {
+    if (obj === 'box') {
+      trackBoy.classList.add('boy-with-box');
+    } else {
+      trackBoy.classList.remove('boy-with-box');
+    }
+  }
   const yOffset = (obj === 'box') ? 30 : (obj === 'trolly') ? -15 : 0;
   trackObject.style.transition = 'none';
   trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
@@ -751,15 +758,12 @@ function runScenario() {
     }
 
     animateBoyGif((boyFrame) => {
-      if (isPushObject) {
-      if (boyFrame === 9) {
-          animateObjectLaunch(selectedForce, blockPos, null, 1);
-        } else if (boyFrame === 19) {
+if (isPushObject) {
+        if (boyFrame === 15) {
           animateObjectLaunch(selectedForce, blockPos, afterLaunch, 2);
         }
         return;
       }
-
       /* ball */
       animateObjectLaunch(selectedForce, blockPos, afterLaunch);
     });
@@ -842,9 +846,8 @@ function animateBoyGif(cb) {
       }
 
       trackBoy.src = frameSrcs[frame];
-
 if (isPushObject) {
-        if (frame === 9) {
+        if (frame === 15) {
           cb(frame);
         } else if (frame === 19 && !ballLaunched) {
           ballLaunched = true;
@@ -879,30 +882,17 @@ function animateObjectLaunch(force, blockPos, cb, phase) {
     const isGentle     = force === 'gentle';
     const isPushObject = (selectedObject === 'trolly' || selectedObject === 'box');
 
-    const targetX = isGentle
+ const targetX = isGentle
       ? trackWidth * 0.38
-      : (blockPos === 'center' ? trackWidth * 0.48 : trackWidth * 0.80);
+      : (blockPos === 'center' ? trackWidth * 0.48 : (isPushObject ? trackWidth * 0.70 : trackWidth * 0.80));
 
     const yOffset = (selectedObject === 'box') ? 30 : (selectedObject === 'trolly') ? -15 : 0;
-
-    if (isPushObject) {
-  if (phase === 1) {
-        /* small slow slide — frames 9 to 26 */
-        const slideX = 50; // small slide distance
-        const slideDuration = 700;
-
-        trackObject.style.transition = `transform ${slideDuration}ms linear`;
-
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            trackObject.style.transform = `translateX(${slideX}px) translateY(${yOffset}px) rotate(0deg)`;
-          });
-        });
-        /* no cb — phase 2 continues seamlessly at frame 26 */
+if (isPushObject) {
+      if (phase === 1) {
         return;
       }
 
-if (phase === 2) {
+      if (phase === 2) {
         /* read current computed position to avoid any snap/jerk */
         const computedTransform = getComputedStyle(trackObject).transform;
         let currentX = 0;
@@ -914,7 +904,7 @@ if (phase === 2) {
           }
         }
 
-        const fastDuration = isGentle ? 700 : 400;
+        const fastDuration = isGentle ? 2600 : 1000;
         const easing = isGentle
           ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
           : 'cubic-bezier(0.1, 0.0, 0.2, 1.0)';
@@ -930,7 +920,8 @@ if (phase === 2) {
           });
         });
 
-        setTimeout(cb, fastDuration);
+        const impactDelay = isGentle ? Math.max(100, fastDuration - 400) : Math.max(100, fastDuration - 500);
+        setTimeout(cb, impactDelay);
         return;
       }
     }
@@ -1780,7 +1771,7 @@ if (!motionIntroPlayed) {
   if (motionCardB) motionCardB.addEventListener('click', () => handleMotionCardClick(motionCardB));
 
   /* ── Complete popup ── */
-  function showMotionCompletePopup() {
+ function showMotionCompletePopup() {
     let popup = document.getElementById('motionCompletePopup');
     if (!popup) {
       popup = document.createElement('div');
@@ -1790,58 +1781,30 @@ if (!motionIntroPlayed) {
         display: flex; align-items: center; justify-content: center;
         background: rgba(10,20,50,0.55); padding: 16px;
       `;
+
       const box = document.createElement('div');
-      box.style.cssText = `
-        position: relative;
-        width: clamp(260px, 44vw, 520px);
-        aspect-ratio: 4/3;
-        text-align: center;
-        font-family: Arial, sans-serif;
-        animation: popupIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
-      `;
-      const frame = document.createElement('img');
-      frame.src = 'icon/Asset1@4x.png';
-      frame.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:1;`;
+      box.className = 'fc-box';
 
-      const inner = document.createElement('div');
-      inner.style.cssText = `
-        position:absolute; inset:5% 5% 14%; z-index:3;
-        display:flex; flex-direction:column; align-items:center; justify-content:center;
-        gap:clamp(8px,1.5vh,18px);
-        background:rgba(255,255,255,0.93);
-        border-radius:clamp(8px,1.5vw,16px);
-        padding:clamp(10px,2vh,22px) clamp(12px,2vw,24px);
-      `;
+      const confettiImg = document.createElement('img');
+      confettiImg.className = 'fc-confetti';
 
-      const icon = document.createElement('div');
-      icon.textContent = '🏆';
-      icon.style.cssText = `font-size:clamp(2rem,4.5vw,3rem);line-height:1;`;
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'fc-img-wrap';
 
-      const msg = document.createElement('p');
-      msg.textContent = 'Great job! You completed all questions!';
-      msg.style.cssText = `
-        font-size:clamp(0.9rem,2vw,1.25rem);font-weight:700;
-        font-family:'Comic',Arial,sans-serif;color:#1a2a4e;
-        line-height:1.4;margin:0;padding:0 clamp(6px,1.5vw,16px);
-      `;
+      const mainImg = document.createElement('img');
+      mainImg.src = 'icon/Simulationcomplete.png';
+      mainImg.className = 'fc-main-img';
 
       const btnRow = document.createElement('div');
-      btnRow.style.cssText = `display:flex;gap:clamp(10px,2vw,20px);align-items:center;justify-content:center;`;
+      btnRow.className = 'fc-btn-row';
 
-      const refreshBtn = document.createElement('button');
-      refreshBtn.textContent = '🔄 Play Again';
-      refreshBtn.style.cssText = `
-        padding:clamp(6px,1.2vh,11px) clamp(18px,3.5vw,36px);
-        border:none; border-radius:50px;
-        background:linear-gradient(135deg,#1a7a3a,#2ebd60);
-        color:#fff; font-size:clamp(0.8rem,1.5vw,1rem);
-        font-weight:700; cursor:pointer;
-        box-shadow:0 4px 14px rgba(30,160,80,0.35);
-        transition:transform 0.15s;
-      `;
-      refreshBtn.onmouseover = () => { refreshBtn.style.transform = 'scale(1.06)'; };
-      refreshBtn.onmouseout  = () => { refreshBtn.style.transform = 'scale(1)'; };
-      refreshBtn.addEventListener('click', () => {
+      const replayBtn = document.createElement('button');
+      replayBtn.className = 'fc-btn';
+      replayBtn.setAttribute('aria-label', 'Replay');
+      const replayImg = document.createElement('img');
+      replayImg.src = 'icon/RePlay.png';
+      replayBtn.appendChild(replayImg);
+      replayBtn.addEventListener('click', () => {
         popup.style.display = 'none';
         resetMotionGame();
         motionCurrentQ = 0;
@@ -1849,35 +1812,39 @@ if (!motionIntroPlayed) {
       });
 
       const backBtn2 = document.createElement('button');
-      backBtn2.textContent = '🏠 Back';
-      backBtn2.style.cssText = `
-        padding:clamp(6px,1.2vh,11px) clamp(18px,3.5vw,36px);
-        border:none; border-radius:50px;
-        background:linear-gradient(135deg,#1a3a6b,#2e5fad);
-        color:#fff; font-size:clamp(0.8rem,1.5vw,1rem);
-        font-weight:700; cursor:pointer;
-        box-shadow:0 4px 14px rgba(30,80,180,0.35);
-        transition:transform 0.15s;
-      `;
-      backBtn2.onmouseover = () => { backBtn2.style.transform = 'scale(1.06)'; };
-      backBtn2.onmouseout  = () => { backBtn2.style.transform = 'scale(1)'; };
+      backBtn2.className = 'fc-btn';
+      backBtn2.setAttribute('aria-label', 'Back');
+      const backImg = document.createElement('img');
+      backImg.src = 'icon/back.png';
+      backBtn2.appendChild(backImg);
       backBtn2.addEventListener('click', () => {
         popup.style.display = 'none';
         resetMotionGame();
         navigateTo(pageMotion, pageIndex);
       });
 
-      btnRow.appendChild(refreshBtn);
+      btnRow.appendChild(replayBtn);
       btnRow.appendChild(backBtn2);
-      inner.appendChild(icon);
-      inner.appendChild(msg);
-      inner.appendChild(btnRow);
-      box.appendChild(frame);
-      box.appendChild(inner);
+      imgWrap.appendChild(mainImg);
+      imgWrap.appendChild(btnRow);
+      box.appendChild(confettiImg);
+      box.appendChild(imgWrap);
       popup.appendChild(box);
       document.body.appendChild(popup);
     }
+
+    const confetti = popup.querySelector('.fc-confetti');
+    if (confetti) {
+      confetti.style.display = 'block';
+      confetti.src = 'icon/Sequence-01.gif?t=' + Date.now();
+      setTimeout(() => { confetti.style.display = 'none'; }, 3000);
+    }
+
     popup.style.display = 'flex';
+    const clap = new Audio('audio/claping.mp3');
+    clap.play().catch(() => {});
+    const party = new Audio('audio/Party Popper Explode 02.wav');
+    party.play().catch(() => {});
   }
 
   /* ── Entry point: called when Motion menu btn clicked ── */
@@ -2110,7 +2077,7 @@ const correctAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
   if (ppPushBtn) ppPushBtn.addEventListener('click', () => handlePushPullAnswer(ppPushBtn));
   if (ppPullBtn) ppPullBtn.addEventListener('click', () => handlePushPullAnswer(ppPullBtn));
 
-  function showPushPullCompletePopup() {
+function showPushPullCompletePopup() {
     let popup = document.getElementById('pushpullCompletePopup');
     if (!popup) {
       popup = document.createElement('div');
@@ -2120,58 +2087,30 @@ const correctAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
         display: flex; align-items: center; justify-content: center;
         background: rgba(10,20,50,0.55); padding: 16px;
       `;
+
       const box = document.createElement('div');
-      box.style.cssText = `
-        position: relative;
-        width: clamp(260px, 44vw, 520px);
-        aspect-ratio: 4/3;
-        text-align: center;
-        font-family: Arial, sans-serif;
-        animation: popupIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
-      `;
-      const frame = document.createElement('img');
-      frame.src = 'icon/Asset1@4x.png';
-      frame.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:1;`;
+      box.className = 'fc-box';
 
-      const inner = document.createElement('div');
-      inner.style.cssText = `
-        position:absolute; inset:5% 5% 14%; z-index:3;
-        display:flex; flex-direction:column; align-items:center; justify-content:center;
-        gap:clamp(8px,1.5vh,18px);
-        background:rgba(255,255,255,0.93);
-        border-radius:clamp(8px,1.5vw,16px);
-        padding:clamp(10px,2vh,22px) clamp(12px,2vw,24px);
-      `;
+      const confettiImg = document.createElement('img');
+      confettiImg.className = 'fc-confetti';
 
-      const icon = document.createElement('div');
-      icon.textContent = '🏆';
-      icon.style.cssText = `font-size:clamp(2rem,4.5vw,3rem);line-height:1;`;
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'fc-img-wrap';
 
-      const msg = document.createElement('p');
-      msg.textContent = 'Great job! You completed all questions!';
-      msg.style.cssText = `
-        font-size:clamp(0.9rem,2vw,1.25rem);font-weight:700;
-        font-family:'Comic',Arial,sans-serif;color:#1a2a4e;
-        line-height:1.4;margin:0;padding:0 clamp(6px,1.5vw,16px);
-      `;
+      const mainImg = document.createElement('img');
+      mainImg.src = 'icon/Simulationcomplete.png';
+      mainImg.className = 'fc-main-img';
 
       const btnRow = document.createElement('div');
-      btnRow.style.cssText = `display:flex;gap:clamp(10px,2vw,20px);align-items:center;justify-content:center;`;
+      btnRow.className = 'fc-btn-row';
 
-      const refreshBtn = document.createElement('button');
-      refreshBtn.textContent = '🔄 Play Again';
-      refreshBtn.style.cssText = `
-        padding:clamp(6px,1.2vh,11px) clamp(18px,3.5vw,36px);
-        border:none; border-radius:50px;
-        background:linear-gradient(135deg,#1a7a3a,#2ebd60);
-        color:#fff; font-size:clamp(0.8rem,1.5vw,1rem);
-        font-weight:700; cursor:pointer;
-        box-shadow:0 4px 14px rgba(30,160,80,0.35);
-        transition:transform 0.15s;
-      `;
-      refreshBtn.onmouseover = () => { refreshBtn.style.transform = 'scale(1.06)'; };
-      refreshBtn.onmouseout  = () => { refreshBtn.style.transform = 'scale(1)'; };
-      refreshBtn.addEventListener('click', () => {
+      const replayBtn = document.createElement('button');
+      replayBtn.className = 'fc-btn';
+      replayBtn.setAttribute('aria-label', 'Replay');
+      const replayImg = document.createElement('img');
+      replayImg.src = 'icon/RePlay.png';
+      replayBtn.appendChild(replayImg);
+      replayBtn.addEventListener('click', () => {
         popup.style.display = 'none';
         resetPushPullGame();
         ppCurrentQ = 0;
@@ -2179,37 +2118,40 @@ const correctAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
       });
 
       const backBtn2 = document.createElement('button');
-      backBtn2.textContent = '🏠 Back';
-      backBtn2.style.cssText = `
-        padding:clamp(6px,1.2vh,11px) clamp(18px,3.5vw,36px);
-        border:none; border-radius:50px;
-        background:linear-gradient(135deg,#1a3a6b,#2e5fad);
-        color:#fff; font-size:clamp(0.8rem,1.5vw,1rem);
-        font-weight:700; cursor:pointer;
-        box-shadow:0 4px 14px rgba(30,80,180,0.35);
-        transition:transform 0.15s;
-      `;
-      backBtn2.onmouseover = () => { backBtn2.style.transform = 'scale(1.06)'; };
-      backBtn2.onmouseout  = () => { backBtn2.style.transform = 'scale(1)'; };
+      backBtn2.className = 'fc-btn';
+      backBtn2.setAttribute('aria-label', 'Back');
+      const backImg = document.createElement('img');
+      backImg.src = 'icon/back.png';
+      backBtn2.appendChild(backImg);
       backBtn2.addEventListener('click', () => {
         popup.style.display = 'none';
         resetPushPullGame();
         navigateTo(pagePushPull, pageIndex);
       });
 
-      btnRow.appendChild(refreshBtn);
+      btnRow.appendChild(replayBtn);
       btnRow.appendChild(backBtn2);
-      inner.appendChild(icon);
-      inner.appendChild(msg);
-      inner.appendChild(btnRow);
-      box.appendChild(frame);
-      box.appendChild(inner);
+      imgWrap.appendChild(mainImg);
+      imgWrap.appendChild(btnRow);
+      box.appendChild(confettiImg);
+      box.appendChild(imgWrap);
       popup.appendChild(box);
       document.body.appendChild(popup);
     }
-    popup.style.display = 'flex';
-  }
 
+    const confetti = popup.querySelector('.fc-confetti');
+    if (confetti) {
+      confetti.style.display = 'block';
+      confetti.src = 'icon/Sequence-01.gif?t=' + Date.now();
+      setTimeout(() => { confetti.style.display = 'none'; }, 3000);
+    }
+
+    popup.style.display = 'flex';
+    const clap = new Audio('audio/claping.mp3');
+    clap.play().catch(() => {});
+    const party = new Audio('audio/Party Popper Explode 02.wav');
+    party.play().catch(() => {});
+  }
 function startPushPullGame() {
     ppCurrentQ = 0;
     ppAnswered = false;
