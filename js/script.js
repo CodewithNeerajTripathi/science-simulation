@@ -14,7 +14,18 @@
 /* ═══════════════════════════════════════════════════════
      INFO POPUP
   ═══════════════════════════════════════════════════════ */
-  function showInfoPopup(imgSrc) {
+let infoAudio = null;
+  let infoAudioMuted = false;
+  let activeGameAudio = null;
+
+  function playGameAudio(src) {
+    if (activeGameAudio) { activeGameAudio.pause(); activeGameAudio.currentTime = 0; }
+    activeGameAudio = new Audio(src);
+    activeGameAudio.volume = infoAudio ? 0 : 1;
+    activeGameAudio.play().catch(() => {});
+    return activeGameAudio;
+  }
+  function showInfoPopup(imgSrc, audioSrc) {
     let popup = document.getElementById('infoPopup');
     if (!popup) {
       popup = document.createElement('div');
@@ -44,7 +55,7 @@
       `;
       const closeBtn = document.createElement('button');
       closeBtn.id = 'infoPopupCloseBtn';
-closeBtn.style.cssText = `
+      closeBtn.style.cssText = `
         position: absolute;
         top: clamp(8px, 1.5vw, 16px);
         right: clamp(8px, 2.7vw, 50px);
@@ -62,11 +73,12 @@ closeBtn.style.cssText = `
       `;
       closeBtn.onmouseover = () => { closeBtn.style.transform = 'scale(1.15)'; };
       closeBtn.onmouseout  = () => { closeBtn.style.transform = 'scale(1)'; };
-  const closeImg = document.createElement('img');
+      const closeImg = document.createElement('img');
       closeImg.src = 'icon/close.png';
       closeImg.style.cssText = `width: 100%; height: 100%; object-fit: contain;`;
       closeBtn.appendChild(closeImg);
-const audioBtn = document.createElement('button');
+
+      const audioBtn = document.createElement('button');
       audioBtn.id = 'infoPopupAudioBtn';
       audioBtn.style.cssText = `
         position: absolute;
@@ -85,11 +97,38 @@ const audioBtn = document.createElement('button');
         transition: transform 0.15s;
       `;
       const audioImg = document.createElement('img');
+      audioImg.id = 'infoPopupAudioImg';
       audioImg.src = 'icon/audio.png';
       audioImg.style.cssText = `width: 100%; height: 100%; object-fit: contain;`;
       audioBtn.appendChild(audioImg);
       audioBtn.onmouseover = () => { audioBtn.style.transform = 'scale(1.15)'; };
       audioBtn.onmouseout  = () => { audioBtn.style.transform = 'scale(1)'; };
+
+audioBtn.addEventListener('click', () => {
+        if (!infoAudio) return;
+ if (infoAudioMuted) {
+          /* unmute and restart from beginning */
+          infoAudioMuted = false;
+          audioImg.src = 'icon/audio.png';
+          infoAudio.currentTime = 0;
+          infoAudio.muted = false;
+          infoAudio.play().catch(() => {});
+          /* info playing again → silence game audios */
+          if (currentInstructionAudio) currentInstructionAudio.volume = 0;
+          if (motionCurrentAudio) motionCurrentAudio.volume = 0;
+          if (ppCurrentAudio) ppCurrentAudio.volume = 0;
+          if (activeGameAudio) activeGameAudio.volume = 0;
+        } else {
+          /* mute info audio → restore others */
+          infoAudioMuted = true;
+          audioImg.src = 'icon/mute.png';
+          infoAudio.muted = true;
+          if (currentInstructionAudio) currentInstructionAudio.volume = 1;
+          if (motionCurrentAudio) motionCurrentAudio.volume = 1;
+          if (ppCurrentAudio) ppCurrentAudio.volume = 1;
+          if (activeGameAudio) activeGameAudio.volume = 1;
+        }
+      });
 
       box.appendChild(img);
       box.appendChild(closeBtn);
@@ -97,8 +136,24 @@ const audioBtn = document.createElement('button');
       popup.appendChild(box);
       document.body.appendChild(popup);
 
+function restoreAllAudio() {
+        if (currentInstructionAudio) currentInstructionAudio.volume = 1;
+        if (motionCurrentAudio) motionCurrentAudio.volume = 1;
+        if (ppCurrentAudio) ppCurrentAudio.volume = 1;
+        if (activeGameAudio) activeGameAudio.volume = 1;
+      }
+
       closeBtn.addEventListener('click', () => {
         popup.style.display = 'none';
+        if (infoAudio) {
+          infoAudio.pause();
+          infoAudio.currentTime = 0;
+          infoAudio = null;
+        }
+        infoAudioMuted = false;
+        const aImg = document.getElementById('infoPopupAudioImg');
+        if (aImg) aImg.src = 'icon/audio.png';
+        restoreAllAudio();
       });
 
       if (!document.getElementById('popupKeyframes')) {
@@ -117,6 +172,39 @@ const audioBtn = document.createElement('button');
     const img = document.getElementById('infoPopupImg');
     img.src = imgSrc;
     popup.style.display = 'flex';
+
+    /* stop any previous audio */
+    if (infoAudio) {
+      infoAudio.pause();
+      infoAudio.currentTime = 0;
+      infoAudio = null;
+    }
+
+    /* reset mute state */
+    infoAudioMuted = false;
+    const aImg = document.getElementById('infoPopupAudioImg');
+    if (aImg) aImg.src = 'icon/audio.png';
+
+/* silence all active audios immediately when popup opens */
+    if (currentInstructionAudio) currentInstructionAudio.volume = 0;
+    if (motionCurrentAudio) motionCurrentAudio.volume = 0;
+    if (ppCurrentAudio) ppCurrentAudio.volume = 0;
+    if (activeGameAudio) activeGameAudio.volume = 0;
+
+    /* play new audio */
+    if (audioSrc) {
+
+      infoAudio = new Audio(audioSrc);
+      infoAudio.play().catch(() => {});
+      infoAudio.addEventListener('ended', () => {
+        infoAudio = null;
+        /* restore all audios when info audio finishes */
+if (currentInstructionAudio) currentInstructionAudio.volume = 1;
+        if (motionCurrentAudio) motionCurrentAudio.volume = 1;
+        if (ppCurrentAudio) ppCurrentAudio.volume = 1;
+        if (activeGameAudio) activeGameAudio.volume = 1;
+      });
+    }
   }
 
   document.querySelectorAll('.page').forEach(page => {
@@ -124,18 +212,23 @@ const audioBtn = document.createElement('button');
     if (!infoBtn) return;
 
     let infoImg = null;
+let infoAudioFile = null;
     if (page.id === 'page-home' || page.id === 'page-index') {
       infoImg = 'icon/simulation-info.png';
+      infoAudioFile = 'audio/Infos/Simulation.mp3';
     } else if (page.id === 'page-force') {
       infoImg = 'icon/Force-info.png';
+      infoAudioFile = 'audio/Infos/Force.mp3';
     } else if (page.id === 'page-motion') {
       infoImg = 'icon/motion-info.png';
+      infoAudioFile = 'audio/Infos/Motion.mp3';
     } else if (page.id === 'page-pushpull') {
       infoImg = 'icon/Pushandpull-info.png';
+      infoAudioFile = 'audio/Infos/pushandpull.mp3';
     }
 
     if (infoImg) {
-      infoBtn.addEventListener('click', () => showInfoPopup(infoImg));
+      infoBtn.addEventListener('click', () => showInfoPopup(infoImg, infoAudioFile));
     }
   });
 
@@ -176,7 +269,21 @@ if (playBtn)      playBtn.addEventListener('click',      () => navigateTo(pageHo
 if (motionBackBtn) motionBackBtn.addEventListener('click', () => { resetMotionGame(); navigateTo(pageMotion, pageIndex); });
   if (pushpullBackBtn) pushpullBackBtn.addEventListener('click', () => { resetPushPullGame(); navigateTo(pagePushPull, pageIndex); });
 
-  document.querySelectorAll('.menu-btn').forEach(btn => {
+document.querySelectorAll('.menu-btn').forEach(btn => {
+    /* add info icon inside each menu button */
+    const infoIcon = document.createElement('img');
+    infoIcon.src = 'icon/info.png';
+    infoIcon.className = 'menu-btn-info-icon';
+    btn.appendChild(infoIcon);
+
+infoIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const label = btn.getAttribute('aria-label');
+      if (label === 'Force')     showInfoPopup('icon/Force-info.png',        'audio/Infos/Force.mp3');
+      if (label === 'Motion')    showInfoPopup('icon/motion-info.png',       'audio/Infos/Motion.mp3');
+      if (label === 'Push/Pull') showInfoPopup('icon/Pushandpull-info.png',  'audio/Infos/pushandpull.mp3');
+    });
+
     btn.addEventListener('click', () => {
       if (btn.getAttribute('aria-label') === 'Force') {
         resetForceGame();
@@ -204,14 +311,30 @@ if (motionBackBtn) motionBackBtn.addEventListener('click', () => { resetMotionGa
       else document.exitFullscreen().catch(() => {});
     });
   });
+const bgMusic = new Audio('audio/Main-version.wav');
+  bgMusic.loop = true;
+  bgMusic.volume = 0.5;
+  bgMusic.muted = true;
+  bgMusic.play().catch(() => {});
 
-  let musicOn = true;
+  let musicOn = false;
+
+  function updateMusicBtns() {
+    document.querySelectorAll('[aria-label="Music"]').forEach(btn => {
+      const img = btn.querySelector('img');
+      if (img) img.src = musicOn ? 'icon/Music.png' : 'icon/Music-2.png';
+    });
+  }
+
   document.querySelectorAll('[aria-label="Music"]').forEach(btn => {
     btn.addEventListener('click', () => {
       musicOn = !musicOn;
-      btn.style.opacity = musicOn ? '1' : '0.5';
+      bgMusic.muted = !musicOn;
+      updateMusicBtns();
     });
   });
+
+  updateMusicBtns();
 
   /* ═══════════════════════════════════════════════════════
      ROTATE OVERLAY
@@ -294,8 +417,9 @@ setTimeout(() => {
         if (line) line.classList.add('line-visible');
 
         /* play audio for this line, move to next line when it ends */
-    const lineAudio = new Audio(`audio/ForceSimulation/0${index + 1}.mp3`);
+  const lineAudio = playGameAudio(`audio/ForceSimulation/0${index + 1}.mp3`);
         lineAudio.muted = !!window.__instructionMuted;
+        if (lineAudio.muted) lineAudio.volume = 0;
         currentInstructionAudio = lineAudio;
 
         const goNext = () => {
@@ -416,26 +540,49 @@ if (clapSound) clapSound.src = 'audio/claping.mp3';
       }
     });
 
-/* show message + clap only after idle delay if no selection made */
-    idleAudioInterval = setInterval(() => {
-      if (clapSound) {
-        clapSound.currentTime = 0;
-        clapSound.play().catch(() => {});
-      }
+/* show message + idle audio only after 10s of no interaction */
+    idleAudioInterval = setTimeout(() => {
       if (active.msg) {
         active.msg.classList.add('msg-visible');
       }
+      const idleSrcMap = {
+        1: 'audio/ForceSimulation/selecttheobject.mp3',
+        2: 'audio/ForceSimulation/pickaforce.mp3',
+        3: 'audio/ForceSimulation/pressplaybutton.mp3',
+      };
+      const idleSrc = idleSrcMap[step];
+      if (idleSrc) {
+        if (idleGameAudio) { idleGameAudio.pause(); idleGameAudio.currentTime = 0; }
+        idleGameAudio = new Audio(idleSrc);
+        idleGameAudio.volume = infoAudio ? 0 : 1;
+        idleGameAudio.play().catch(() => {});
+      }
+      /* repeat every 10s until user interacts */
+      idleAudioInterval = setInterval(() => {
+        if (idleGameAudio) { idleGameAudio.pause(); idleGameAudio.currentTime = 0; }
+        idleGameAudio = new Audio(idleSrc);
+        idleGameAudio.volume = infoAudio ? 0 : 1;
+        idleGameAudio.play().catch(() => {});
+      }, 10000);
     }, 10000);
   }
 
+let idleGameAudio = null;
+
   function clearStepTimers() {
     if (idleAudioInterval) {
-      clearInterval(idleAudioInterval);
+      clearTimeout(idleAudioInterval);
       idleAudioInterval = null;
     }
     if (confirmTimeout) {
       clearTimeout(confirmTimeout);
       confirmTimeout = null;
+    }
+    /* stop only idle hint audio, not result/game audio */
+    if (idleGameAudio) {
+      idleGameAudio.pause();
+      idleGameAudio.currentTime = 0;
+      idleGameAudio = null;
     }
   }
 
@@ -444,11 +591,10 @@ if (clapSound) clapSound.src = 'audio/claping.mp3';
     if (step !== currentStep) return;
 
     /* stop idle nudge */
-    if (idleAudioInterval) {
-      clearInterval(idleAudioInterval);
+if (idleAudioInterval) {
+      clearTimeout(idleAudioInterval);
       idleAudioInterval = null;
     }
-
     const cards = getStepCards();
     const active = cards[step];
     if (!active || !active.card) return;
@@ -918,6 +1064,82 @@ const totalTime = isGentle
 
     setTimeout(cb, totalTime);
   }
+
+
+function showForceCompletePopup() {
+    let popup = document.getElementById('forceCompletePopup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.id = 'forceCompletePopup';
+
+      const box = document.createElement('div');
+      box.className = 'fc-box';
+
+      const confettiImg = document.createElement('img');
+      confettiImg.className = 'fc-confetti';
+
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'fc-img-wrap';
+
+      const mainImg = document.createElement('img');
+      mainImg.src = 'icon/Simulationcomplete.png';
+      mainImg.className = 'fc-main-img';
+
+      const btnRow = document.createElement('div');
+      btnRow.className = 'fc-btn-row';
+
+      const replayBtn = document.createElement('button');
+     replayBtn.className = 'fc-btn';
+      replayBtn.setAttribute('aria-label', 'Replay');
+      const replayImg = document.createElement('img');
+      replayImg.src = 'icon/RePlay.png';
+      replayBtn.appendChild(replayImg);
+      replayBtn.addEventListener('click', () => {
+        popup.style.display = 'none';
+        resetForceGame();
+        setTimeout(() => {
+          runInstructionSequence(() => { showCard1(); });
+        }, 300);
+      });
+
+      const backBtn2 = document.createElement('button');
+ backBtn2.className = 'fc-btn';
+      backBtn2.setAttribute('aria-label', 'Back');
+      const backImg = document.createElement('img');
+      backImg.src = 'icon/back.png';
+      backBtn2.appendChild(backImg);
+      backBtn2.addEventListener('click', () => {
+        popup.style.display = 'none';
+        resetForceGame();
+        navigateTo(pageForce, pageIndex);
+      });
+
+      btnRow.appendChild(replayBtn);
+      btnRow.appendChild(backBtn2);
+      imgWrap.appendChild(mainImg);
+      imgWrap.appendChild(btnRow);
+      box.appendChild(confettiImg);
+      box.appendChild(imgWrap);
+      popup.appendChild(box);
+      document.body.appendChild(popup);
+    }
+
+    const confetti = popup.querySelector('.fc-confetti');
+    if (confetti) {
+      confetti.style.display = 'block';
+      confetti.src = 'icon/Sequence-01.gif?t=' + Date.now();
+      setTimeout(() => { confetti.style.display = 'none'; }, 3000);
+    }
+
+    popup.style.display = 'flex';
+
+    const clap = new Audio('audio/claping.mp3');
+    clap.play().catch(() => {});
+    const party = new Audio('audio/Party Popper Explode 02.wav');
+    party.play().catch(() => {});
+  }
+
+
   /* ═══════════════════════════════════════════════════════
      FINISH SCENARIO — RESET FOR NEXT PLAY
   ═══════════════════════════════════════════════════════ */
@@ -928,50 +1150,88 @@ function finishScenario(blockPos) {
 let popupMsg = '';
     let popupAudio = '';
     const objAudioMap = { ball: '05-ball', trolly: '06-cart', box: '07-box' };
-
-    if (selectedForce === 'gentle' && blockPos !== 'center') {
-      popupMsg = "The push was too gentle. Try using a stronger force.";
-      popupAudio = '04';
-    } else if (selectedForce === 'strong') {
-      popupMsg = `Excellent! The strong push helped the ${getObjectLabel()} travel far and hit the blocks with force.`;
+if (selectedForce === 'gentle' && blockPos !== 'center') {
+      popupMsg = '';
+      popupAudio = '';
+} else if (selectedForce === 'strong') {
       popupAudio = objAudioMap[selectedObject];
     } else if (selectedForce === 'gentle' && blockPos === 'center') {
-      popupMsg = "Wow! Even a gentle push broke the blocks because they were right in the way!";
       popupAudio = objAudioMap[selectedObject];
     }
 
-    if (popupAudio) {
-      const resultAudio = new Audio(`audio/ForceSimulation/${popupAudio}.mp3`);
-      resultAudio.play().catch(() => {});
+ if (selectedForce === 'gentle' && blockPos !== 'center') {
+      // show sim01.png centered, highlight after audio ends, then auto-refresh
+      const simImg = document.createElement('img');
+      simImg.src = 'icon/sim01.png';
+      simImg.style.cssText = `
+        position: fixed; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 99999;
+        width: clamp(200px, 40vw, 500px);
+        opacity: 1;
+        transition: filter 0.4s ease, opacity 0.4s ease;
+        border-radius: 16px;
+      `;
+      document.body.appendChild(simImg);
+
+    const gentleAudio = playGameAudio('audio/ForceSimulation/04.mp3');
+
+      const onAudioEnd = () => {
+      simImg.style.filter = 'drop-shadow(0 0 18px rgba(0,200,255,1))';
+        setTimeout(() => {
+          document.body.removeChild(simImg);
+          rebuildBlocks();
+          if (trackObject) {
+            const yOffset = (selectedObject === 'box') ? 30 : (selectedObject === 'trolly') ? -15 : 0;
+            trackObject.style.transition = 'none';
+            trackObject.style.transform = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+          }
+          positionBlocks('right');
+          selectedForce = null;
+          updateForceButtons();
+          showCard2();
+        }, 1200);
+      };
+
+      gentleAudio.addEventListener('ended', onAudioEnd);
+      gentleAudio.addEventListener('error', onAudioEnd);
+
+      isAnimating = false;
+      setControlsEnabled(true);
+      return;
     }
 
-showResultPopup(popupMsg, () => {
-      /* AFTER user clicks OK: rebuild pyramid, then advance object if round 2 just finished */
-      rebuildBlocks();
-
-      /* reset object position now (after OK) */
-      if (trackObject) {
-        const yOffset = (selectedObject === 'box') ? 30: (selectedObject === 'trolly') ? -15 : 0;
-        trackObject.style.transition = 'none';
-        trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
-      }
-
-      const justFinishedRound2 = (selectedObject === null);
-
-      if (justFinishedRound2) {
-        const nextBtn = document.querySelector('.obj-btn:not(.btn-exhausted)');
-        if (nextBtn) {
-          nextBtn.__autoClick = true;
-          nextBtn.click();
-          nextBtn.__autoClick = false;
-        } else {
-          showResultPopup("Great job! You've completed all the experiments!");
-        }
-      } else {
-        const pos = (currentRound === 1) ? 'right' : 'center';
-        positionBlocks(pos);
-      }
-    });
+if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'center')) {
+      const imgMap = { ball: 'sim02.png', trolly: 'sim02_2.png', box: 'sim02_3.png' };
+      const simImg = document.createElement('img');
+      simImg.src = 'icon/' + imgMap[selectedObject];
+      simImg.style.cssText = `position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:99999;width:clamp(200px,40vw,500px);opacity:1;transition:filter 0.4s ease;border-radius:16px;`;
+      document.body.appendChild(simImg);
+     const resultAudio = playGameAudio(`audio/ForceSimulation/${popupAudio}.mp3`);
+      const onAudioEnd = () => {
+        simImg.style.filter = 'drop-shadow(0 0 18px rgba(0,200,255,1))';
+     setTimeout(() => {
+          document.body.removeChild(simImg);
+          rebuildBlocks();
+          if (trackObject) {
+            const yOffset = (selectedObject === 'box') ? 30 : (selectedObject === 'trolly') ? -15 : 0;
+            trackObject.style.transition = 'none';
+            trackObject.style.transform = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+          }
+          const justFinishedRound2 = (selectedObject === null);
+       if (justFinishedRound2) {
+            const nextBtn = document.querySelector('.obj-btn:not(.btn-exhausted)');
+            if (nextBtn) { nextBtn.__autoClick = true; nextBtn.click(); nextBtn.__autoClick = false; }
+            else { showForceCompletePopup(); }
+          } else {
+            const pos = (currentRound === 1) ? 'right' : 'center';
+            positionBlocks(pos);
+          }
+        }, 1200);
+      };
+      resultAudio.addEventListener('ended', onAudioEnd);
+      resultAudio.addEventListener('error', onAudioEnd);
+    }
 
     /* reset boy position silently */
     if (trackBoy) {
@@ -1425,9 +1685,8 @@ let motionIntroPlayed = false;
         if (line3) line3.classList.add('line-visible');
         if (audio2Btn) audio2Btn.classList.add('audio-visible');
 
-        const a2 = new Audio('audio/Motion/' + q.audio + '.mp3');
+      const a2 = playGameAudio('audio/Motion/' + q.audio + '.mp3');
         motionCurrentAudio = a2;
-        a2.play().catch(() => {});
 
         const goCards = () => { onDone && onDone(); };
         a2.addEventListener('ended', goCards);
@@ -1440,9 +1699,8 @@ if (!motionIntroPlayed) {
       motionIntroPlayed = true;
 
       /* play 01.mp3 once for both lines */
-      const a1 = new Audio('audio/Motion/01.mp3');
+ const a1 = playGameAudio('audio/Motion/01.mp3');
       motionCurrentAudio = a1;
-      a1.play().catch(() => {});
 
       /* show line 1 first */
       setTimeout(() => {
@@ -1496,9 +1754,7 @@ if (!motionIntroPlayed) {
     if (isCorrect) {
       card.classList.add('selected');
       const rnd = Math.floor(Math.random() * 5) + 1;
-      const correctAudio = new Audio('audio/Extras/0' + rnd + '.mp3');
-      correctAudio.play().catch(() => {});
-
+   const correctAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
       setTimeout(() => {
         motionCurrentQ++;
         stopGif();
@@ -1508,8 +1764,7 @@ if (!motionIntroPlayed) {
     } else {
       card.classList.add('wrong');
       const rnd = Math.floor(Math.random() * 4) + 6;
-      const wrongAudio = new Audio('audio/Extras/0' + rnd + '.mp3');
-      wrongAudio.play().catch(() => {});
+  const wrongAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
 
       setTimeout(() => {
         card.classList.remove('wrong');
@@ -1626,14 +1881,58 @@ if (!motionIntroPlayed) {
   }
 
   /* ── Entry point: called when Motion menu btn clicked ── */
+let motionAudioMuted = false;
+
+  document.getElementById('motionAudioBtn1') && document.getElementById('motionAudioBtn1').addEventListener('click', () => {
+    motionAudioMuted = !motionAudioMuted;
+    const img1 = document.querySelector('#motionAudioBtn1 img');
+    const img2 = document.querySelector('#motionAudioBtn2 img');
+    if (img1) img1.src = motionAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (img2) img2.src = motionAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (motionCurrentAudio) motionCurrentAudio.muted = motionAudioMuted;
+  });
+
+  document.getElementById('motionAudioBtn2') && document.getElementById('motionAudioBtn2').addEventListener('click', () => {
+    motionAudioMuted = !motionAudioMuted;
+    const img1 = document.querySelector('#motionAudioBtn1 img');
+    const img2 = document.querySelector('#motionAudioBtn2 img');
+    if (img1) img1.src = motionAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (img2) img2.src = motionAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (motionCurrentAudio) motionCurrentAudio.muted = motionAudioMuted;
+  });
+
+  let ppAudioMuted = false;
+
+  document.getElementById('ppAudioBtn1') && document.getElementById('ppAudioBtn1').addEventListener('click', () => {
+    ppAudioMuted = !ppAudioMuted;
+    const img1 = document.querySelector('#ppAudioBtn1 img');
+    const img2 = document.querySelector('#ppAudioBtn2 img');
+    if (img1) img1.src = ppAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (img2) img2.src = ppAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (ppCurrentAudio) ppCurrentAudio.muted = ppAudioMuted;
+  });
+
+  document.getElementById('ppAudioBtn2') && document.getElementById('ppAudioBtn2').addEventListener('click', () => {
+    ppAudioMuted = !ppAudioMuted;
+    const img1 = document.querySelector('#ppAudioBtn1 img');
+    const img2 = document.querySelector('#ppAudioBtn2 img');
+    if (img1) img1.src = ppAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (img2) img2.src = ppAudioMuted ? 'icon/mute.png' : 'icon/audio.png';
+    if (ppCurrentAudio) ppCurrentAudio.muted = ppAudioMuted;
+  });
+
   function startMotionGame() {
     motionCurrentQ  = 0;
     motionAnswered  = false;
     motionCardsLocked = true;
+    motionAudioMuted = false;
+    const img1 = document.querySelector('#motionAudioBtn1 img');
+    const img2 = document.querySelector('#motionAudioBtn2 img');
+    if (img1) img1.src = 'icon/audio.png';
+    if (img2) img2.src = 'icon/audio.png';
     stopGif();
     loadMotionQuestion(0);
   }
-
 function resetMotionGame() {
     motionAnswered  = false;
     motionCardsLocked = true;
@@ -1729,9 +2028,8 @@ function ppPlaySceneGif() {
         if (line3) line3.classList.add('line-visible');
         if (audio2Btn) audio2Btn.classList.add('audio-visible');
 
-        const a2 = new Audio('audio/Pushandpull/' + q.audio + '.mp3');
+    const a2 = playGameAudio('audio/Pushandpull/' + q.audio + '.mp3');
         ppCurrentAudio = a2;
-        a2.play().catch(() => {});
 
         const goCards = () => { onDone && onDone(); };
         a2.addEventListener('ended', goCards);
@@ -1742,9 +2040,8 @@ function ppPlaySceneGif() {
     if (!ppIntroPlayed) {
       ppIntroPlayed = true;
 
-      const a1 = new Audio('audio/Pushandpull/01.mp3');
+   const a1 = playGameAudio('audio/Pushandpull/01.mp3');
       ppCurrentAudio = a1;
-      a1.play().catch(() => {});
 
       setTimeout(() => {
         if (line1) line1.classList.add('line-visible');
@@ -1790,8 +2087,7 @@ function ppPlaySceneGif() {
     if (isCorrect) {
       btn.classList.add('selected');
       const rnd = Math.floor(Math.random() * 5) + 1;
-      const correctAudio = new Audio('audio/Extras/0' + rnd + '.mp3');
-      correctAudio.play().catch(() => {});
+const correctAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
 
       setTimeout(() => {
         ppCurrentQ++;
@@ -1801,8 +2097,7 @@ function ppPlaySceneGif() {
     } else {
       btn.classList.add('wrong');
       const rnd = Math.floor(Math.random() * 4) + 6;
-      const wrongAudio = new Audio('audio/Extras/0' + rnd + '.mp3');
-      wrongAudio.play().catch(() => {});
+ const wrongAudio = playGameAudio('audio/Extras/0' + rnd + '.mp3');
 
       setTimeout(() => {
         btn.classList.remove('wrong');
@@ -1915,10 +2210,15 @@ function ppPlaySceneGif() {
     popup.style.display = 'flex';
   }
 
-  function startPushPullGame() {
+function startPushPullGame() {
     ppCurrentQ = 0;
     ppAnswered = false;
     ppCardsLocked = true;
+    ppAudioMuted = false;
+    const img1 = document.querySelector('#ppAudioBtn1 img');
+    const img2 = document.querySelector('#ppAudioBtn2 img');
+    if (img1) img1.src = 'icon/audio.png';
+    if (img2) img2.src = 'icon/audio.png';
     loadPushPullQuestion(0);
   }
 
