@@ -221,7 +221,7 @@ let infoAudioFile = null;
     if (page.id === 'page-home' || page.id === 'page-index') {
       infoImg = 'icon/simulation-info.png';
       infoAudioFile = 'audio/Infos/Simulation.mp3';
-    } else if (page.id === 'page-force') {
+   } else if (page.id === 'page-force' || page.id === 'page-charselect') {
       infoImg = 'icon/Force-info.png';
       infoAudioFile = 'audio/Infos/Force.mp3';
     } else if (page.id === 'page-motion') {
@@ -251,6 +251,64 @@ const pageHome  = document.getElementById('page-home');
   const motionBackBtn = document.getElementById('motionBackBtn');
   const pushpullBackBtn = document.getElementById('pushpullBackBtn');
   const rotateOverlay = document.getElementById('rotateOverlay');
+  const pageCharSelect = document.getElementById('page-charselect');
+  const charselectBackBtn = document.getElementById('charselectBackBtn');
+
+  if (charselectBackBtn) {
+    charselectBackBtn.addEventListener('click', () => navigateTo(pageCharSelect, pageIndex));
+  }
+  /* re-trigger charselect entry animations on every visit */
+  const pageCharSelectEl = document.getElementById('page-charselect');
+  const origNavigateTo = navigateTo;
+  const _navigateToOrig = navigateTo;
+/* mark cards as done after animation so hover transform works */
+  setTimeout(() => {
+    document.getElementById('charShivam') && document.getElementById('charShivam').classList.add('anim-done');
+    document.getElementById('charSiya') && document.getElementById('charSiya').classList.add('anim-done');
+  }, 1200);
+function replayCharselectAnims() {
+    document.getElementById('charShivam') && document.getElementById('charShivam').classList.remove('anim-done');
+    document.getElementById('charSiya') && document.getElementById('charSiya').classList.remove('anim-done');
+    setTimeout(() => {
+      document.getElementById('charShivam') && document.getElementById('charShivam').classList.add('anim-done');
+      document.getElementById('charSiya') && document.getElementById('charSiya').classList.add('anim-done');
+    }, 1200);
+    const title = document.querySelector('.charselect-title');
+    const cards = document.querySelectorAll('.charselect-card');
+    const imgs  = document.querySelectorAll('.charselect-img');
+    const names = document.querySelectorAll('.charselect-name');
+    [title, ...cards, ...imgs, ...names].forEach(el => {
+      if (!el) return;
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = '';
+    });
+  }
+
+  /* patch navigateTo to replay anims when going TO charselect */
+  const _origNav = navigateTo;
+  navigateTo = function(from, to) {
+    if (to === pageCharSelect) {
+      setTimeout(replayCharselectAnims, 50);
+    }
+    _origNav(from, to);
+  };
+
+document.getElementById('charShivam') && document.getElementById('charShivam').addEventListener('click', () => {
+    selectedCharacter = 'shivam';
+    if (trackBoy) trackBoy.src = 'icon/KICK/Final00.png';
+    preloadBoyFrames();
+    navigateTo(pageCharSelect, pageForce);
+    setTimeout(() => { runInstructionSequence(() => { showCard1(); }); }, 500);
+  });
+
+  document.getElementById('charSiya') && document.getElementById('charSiya').addEventListener('click', () => {
+    selectedCharacter = 'siya';
+    if (trackBoy) trackBoy.src = 'icon/Girl Kick/Final00.png';
+    preloadBoyFrames();
+    navigateTo(pageCharSelect, pageForce);
+    setTimeout(() => { runInstructionSequence(() => { showCard1(); }); }, 500);
+  });
 
 function navigateTo(from, to) {
     if (!from || !to || from === to) return;
@@ -280,7 +338,7 @@ document.querySelectorAll('.menu-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.getAttribute('aria-label') === 'Force') {
         resetForceGame();
-        navigateTo(pageIndex, pageForce);
+        navigateTo(pageIndex, pageCharSelect);
    } else if (btn.getAttribute('aria-label') === 'Motion') {
         navigateTo(pageIndex, pageMotion);
         setTimeout(() => {
@@ -431,12 +489,11 @@ function updateMusicBtns() {
     After 2 plays, that force button becomes disabled for that object.
     Switching object resets nothing — each object has its own counter.
   */
-const scenarioCounter = {
-    ball:   { gentle: 0, strong: 0 },
-    trolly: { gentle: 0, strong: 0 },
-    box:    { gentle: 0, strong: 0 },
+const usedForces = {
+    ball:   { gentle: false, strong: false },
+    trolly: { gentle: false, strong: false },
+    box:    { gentle: false, strong: false },
   };
-
 function getObjectYOffset(obj) {
     const isMobile = window.matchMedia('(max-height: 440px) and (orientation: landscape)').matches;
     if (obj === 'box')   return isMobile ? 3 : 30;
@@ -444,7 +501,8 @@ function getObjectYOffset(obj) {
     return 0;
   }
 
-let selectedObject = null;   // 'ball' | 'trolly' | 'box'
+let selectedCharacter = 'shivam'; // 'shivam' | 'siya'
+  let selectedObject = null;   // 'ball' | 'trolly' | 'box'
   let selectedForce  = null;   // 'gentle' | 'strong'
   let isAnimating    = false;
   let currentRound   = 1;      // 1 = right pyramid, 2 = center pyramid
@@ -769,8 +827,15 @@ if (trackBoy) {
 function updateForceButtons() {
     if (!selectedObject) return;
     document.querySelectorAll('.force-type-btn').forEach(btn => {
-      btn.classList.remove('selected', 'btn-exhausted');
-      btn.disabled = false;
+      const force = btn.dataset.force;
+      btn.classList.remove('selected');
+      if (usedForces[selectedObject][force]) {
+        btn.classList.add('btn-exhausted');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('btn-exhausted');
+        btn.disabled = false;
+      }
     });
   }
 
@@ -809,7 +874,7 @@ function runScenario() {
 
     if (forcePlayCard) forcePlayCard.classList.remove('play-card-in');
 
-    scenarioCounter[selectedObject][selectedForce]++;
+   usedForces[selectedObject][selectedForce] = true;
     rebuildBlocks();
 
     const blockPos = (currentRound === 1) ? 'right' : 'center';
@@ -899,53 +964,69 @@ function positionBlocks(pos) {
 function animateBoyGif(cb) {
     if (!trackBoy) { cb(); return; }
 
-    const isPushObject = (selectedObject === 'trolly' || selectedObject === 'box');
-    const folder      = isPushObject ? 'Gentle Push' : 'KICK';
-    const totalFrames = isPushObject ? 36 : 34;
+const isPushObject = (selectedObject === 'trolly' || selectedObject === 'box');
+    const pushFolder  = selectedCharacter === 'siya' ? 'Girl push' : 'Gentle Push';
+    const kickFolder  = selectedCharacter === 'siya' ? 'Girl Kick' : 'KICK';
+    const folder      = isPushObject ? pushFolder : kickFolder;
+    const totalFrames = isPushObject ? (selectedCharacter === 'siya' ? 35 : 36) : 34;
     const ballFrame   = isPushObject ? 26 : 19;
-    const resetFrame  = isPushObject ? 'Gentle Push/Final00.png' : 'KICK/Final00.png';
+    const resetFrame  = isPushObject ? pushFolder + '/Final00.png' : kickFolder + '/Final00.png';
 
-    /* preload all frames first so swapping is instant/smooth */
+    /* build frame list */
     const frameSrcs = [];
     for (let f = 0; f < totalFrames; f++) {
       const padded = String(f).padStart(2, '0');
-      const src = `icon/${folder}/Final${padded}.png`;
-      frameSrcs.push(src);
-      const img = new Image();
-      img.src = src;
+      frameSrcs.push(`icon/${folder}/Final${padded}.png`);
     }
 
-    const fps = (selectedForce === 'strong') ? 80 : 24;
-    const ms  = Math.round(1000 / fps);
-    let frame = 0;
-    let ballLaunched = false;
+    /* preload ALL frames and wait until every one is actually loaded
+       (or errored) before starting the animation — fixes frames
+       randomly not showing when a frame isn't cached yet. */
+    let loadedCount = 0;
+    const loadedImgs = new Array(frameSrcs.length);
+    function startAnim() {
+      const fps = (selectedForce === 'strong') ? 80 : 24;
+      const ms  = Math.round(1000 / fps);
+      let frame = 0;
+      let ballLaunched = false;
 
-    /* show frame 0 immediately */
-    trackBoy.src = frameSrcs[0];
+      /* show frame 0 immediately */
+      trackBoy.src = frameSrcs[0];
 
-    window.__boyAnimInterval = setInterval(() => {
-      frame++;
+      window.__boyAnimInterval = setInterval(() => {
+        frame++;
 
-    if (frame >= totalFrames) {
-        clearInterval(window.__boyAnimInterval);
-        window.__boyAnimInterval = null;
-        trackBoy.src = `icon/${resetFrame}`;
-        return;
-      }
+        if (frame >= totalFrames) {
+          clearInterval(window.__boyAnimInterval);
+          window.__boyAnimInterval = null;
+          trackBoy.src = `icon/${resetFrame}`;
+          return;
+        }
 
-      trackBoy.src = frameSrcs[frame];
-if (isPushObject) {
-        if (frame === 15) {
-          cb(frame);
-        } else if (frame === 19 && !ballLaunched) {
+        trackBoy.src = frameSrcs[frame];
+        if (isPushObject) {
+          if (frame === 15) {
+            cb(frame);
+          } else if (frame === 19 && !ballLaunched) {
+            ballLaunched = true;
+            cb(frame);
+          }
+        } else if (frame >= ballFrame && !ballLaunched) {
           ballLaunched = true;
           cb(frame);
         }
-      } else if (frame >= ballFrame && !ballLaunched) {
-        ballLaunched = true;
-        cb(frame);
-      }
-    }, ms);
+      }, ms);
+    }
+
+    frameSrcs.forEach((src, i) => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loadedCount++;
+        if (loadedCount === frameSrcs.length) startAnim();
+      };
+      img.src = src;
+      loadedImgs[i] = img;
+    });
   }
   /* ═══════════════════════════════════════════════════════
      BOY EXIT ANIMATION
@@ -970,8 +1051,14 @@ function animateObjectLaunch(force, blockPos, cb, phase) {
     const isGentle     = force === 'gentle';
     const isPushObject = (selectedObject === 'trolly' || selectedObject === 'box');
 
+const isMobileLaunch = window.matchMedia('(max-height: 440px) and (orientation: landscape)').matches;
+
 const targetX = isGentle
-      ? (blockPos === 'center' && isPushObject ? trackWidth * 0.31 : trackWidth * 0.38)
+      ? (blockPos === 'center'
+          ? (isPushObject
+             ? trackWidth * (isMobileLaunch ? 0.48 : 0.31)
+              : trackWidth * (isMobileLaunch ? 0.54 : 0.38))
+          : trackWidth * 0.38)
       : (blockPos === 'center' ? trackWidth * 0.48 : (isPushObject ? trackWidth * 0.70 : trackWidth * 0.80));
 
     const yOffset = getObjectYOffset(selectedObject);
@@ -1260,43 +1347,14 @@ const blurOverlay1 = document.createElement('div');
       document.body.appendChild(blurOverlay1);
       document.body.appendChild(simImg);
 
-      let wrongIcon1 = null;
-      if (selectedObject === 'ball') {
-        wrongIcon1 = document.createElement('img');
-        wrongIcon1.src = 'icon/wrong.png';
-        wrongIcon1.style.cssText = `
-          position: absolute;
-          top: -10px;
-          right: -10px;
-          width: clamp(40px, 8vw, 70px);
-          height: clamp(40px, 8vw, 70px);
-          object-fit: contain;
-          z-index: 1;
-        `;
-        simImg.style.position = 'fixed';
-   const wrapDiv = document.createElement('div');
-        wrapDiv.classList.add('sim-popup-el');
-        wrapDiv.style.cssText = `position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 99999;`;
-        simImg.style.position = 'relative';
-        simImg.style.left = '0';
-        simImg.style.top = '0';
-        simImg.style.transform = 'none';
-        document.body.removeChild(simImg);
-        wrapDiv.appendChild(simImg);
-        wrapDiv.appendChild(wrongIcon1);
-        document.body.appendChild(wrapDiv);
-        window.__wrongIconWrap1 = wrapDiv;
-      }
+  
 
     const gentleAudio = playGameAudio('audio/ForceSimulation/04.mp3');
 
-  const onAudioEnd = () => {
+const onAudioEnd = () => {
       simImg.style.filter = 'drop-shadow(0 0 18px rgba(0,200,255,1))';
         setTimeout(() => {
-       if (window.__wrongIconWrap1 && window.__wrongIconWrap1.parentNode) {
-            document.body.removeChild(window.__wrongIconWrap1);
-            window.__wrongIconWrap1 = null;
-          } else if (simImg.parentNode) {
+      if (simImg.parentNode) {
             document.body.removeChild(simImg);
           }
           if (blurOverlay1 && blurOverlay1.parentNode) document.body.removeChild(blurOverlay1);
@@ -1306,10 +1364,34 @@ rebuildBlocks();
             trackObject.style.transition = 'none';
             trackObject.style.transform = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
           }
-          positionBlocks('right');
-          selectedForce = null;
-          updateForceButtons();
-          showCard2();
+
+          /* check if both forces now used — if yes, advance round */
+          const bothUsedNow = usedForces[selectedObject].gentle && usedForces[selectedObject].strong;
+          if (bothUsedNow && currentRound === 1) {
+            usedForces[selectedObject].gentle = false;
+            usedForces[selectedObject].strong = false;
+            currentRound = 2;
+            selectedForce = null;
+            updateForceButtons();
+            positionBlocks('center');
+            document.querySelectorAll('.obj-btn').forEach(b => { b.disabled = true; });
+            showCard2();
+          } else if (bothUsedNow && currentRound === 2) {
+            const obj = selectedObject;
+            const objBtn = document.querySelector(`.obj-btn[data-object="${obj}"]`);
+            if (objBtn) { objBtn.classList.add('btn-exhausted'); objBtn.disabled = true; objBtn.classList.remove('selected'); }
+            selectedObject = null;
+            selectedForce = null;
+            document.querySelectorAll('.obj-btn:not(.btn-exhausted)').forEach(b => { b.disabled = false; });
+            const nextBtn = document.querySelector('.obj-btn:not(.btn-exhausted)');
+            if (nextBtn) { nextBtn.__autoClick = true; nextBtn.click(); nextBtn.__autoClick = false; }
+            else { showForceCompletePopup(); }
+          } else {
+            positionBlocks('right');
+            selectedForce = null;
+            updateForceButtons();
+            showCard2();
+          }
         }, 1200);
       };
 
@@ -1359,9 +1441,10 @@ if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'c
     }
 
     /* reset boy position silently */
-    if (trackBoy) {
+  if (trackBoy) {
       trackBoy.style.transition = 'none';
       trackBoy.style.transform  = 'translateX(0)';
+      trackBoy.src = selectedCharacter === 'siya' ? 'icon/Girl Kick/Final00.png' : 'icon/KICK/Final00.png';
     }
 
     isAnimating = false;
@@ -1372,8 +1455,14 @@ if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'c
 /* check if blocks broke this play */
     const blocksBroke = (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'center'));
 
-if (blocksBroke && currentRound === 1) {
+/* check if both forces used this round */
+    const bothUsed = usedForces[selectedObject].gentle && usedForces[selectedObject].strong;
+
+    if (bothUsed && currentRound === 1) {
       /* Round 1 done → move to Round 2 (center pyramid), same object */
+      /* reset used forces for round 2 */
+      usedForces[selectedObject].gentle = false;
+      usedForces[selectedObject].strong = false;
       currentRound = 2;
       selectedForce = null;
       if (forcePlayCard) forcePlayCard.classList.remove('play-card-in');
@@ -1383,7 +1472,7 @@ if (blocksBroke && currentRound === 1) {
       /* lock object selection during round 2 */
       document.querySelectorAll('.obj-btn').forEach(b => { b.disabled = true; });
 
-} else if (blocksBroke && currentRound === 2) {
+} else if (bothUsed && currentRound === 2) {
       /* Round 2 done → object fully complete, advance to next object AFTER popup OK */
       const obj = selectedObject;
       const objBtn = document.querySelector(`.obj-btn[data-object="${obj}"]`);
@@ -1597,9 +1686,9 @@ function resetForceGame() {
     stopAllGameAudio();
 
     /* reset counters */
-    Object.keys(scenarioCounter).forEach(obj => {
-      scenarioCounter[obj].gentle = 0;
-      scenarioCounter[obj].strong = 0;
+  Object.keys(usedForces).forEach(obj => {
+      usedForces[obj].gentle = false;
+      usedForces[obj].strong = false;
     });
 
     selectedObject = null;
@@ -1629,9 +1718,9 @@ function resetForceGame() {
 
     if (forcePlayCard) forcePlayCard.classList.remove('play-card-in');
 
-    if (trackObject) {
+ if (trackObject) {
       trackObject.src = 'icon/ball.png';
-trackObject.className = 'track-object obj-ball';
+trackObject.className = 'track-object obj-ball obj-hidden';
       trackObject.style.transition = 'none';
       trackObject.style.transform  = '';
     }
@@ -1669,9 +1758,9 @@ trackObject.className = 'track-object obj-ball';
      PAGE-FORCE ENTRY — trigger instruction sequence
   ═══════════════════════════════════════════════════════ */
 function preloadBoyFrames() {
-    const folders = [
-      { folder: 'KICK', totalFrames: 34 },
-      { folder: 'Gentle Push', totalFrames: 36 }
+const folders = [
+      { folder: selectedCharacter === 'siya' ? 'Girl Kick' : 'KICK', totalFrames: 34 },
+      { folder: selectedCharacter === 'siya' ? 'Girl push' : 'Gentle Push', totalFrames: selectedCharacter === 'siya' ? 35 : 36 }
     ];
     folders.forEach(({ folder, totalFrames }) => {
       for (let f = 0; f < totalFrames; f++) {
@@ -1682,18 +1771,9 @@ function preloadBoyFrames() {
     });
   }
 
-  const menuForceBtns = document.querySelectorAll('.menu-btn[aria-label="Force"]');
-  menuForceBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      preloadBoyFrames();
-      /* run instruction sequence then reveal card 1 */
-      setTimeout(() => {
-        runInstructionSequence(() => {
-          showCard1();
-        });
-      }, 500);
-    });
-  });
+/* removed: instruction sequence now only runs after character is
+     selected (see charShivam/charSiya click handlers), since Force
+     menu button now routes through Character Select first. */
 /* ═══════════════════════════════════════
      PAGE-MOTION LOGIC
   ═══════════════════════════════════════ */
@@ -1885,7 +1965,7 @@ if (!motionIntroPlayed) {
       clearTimeout(window.__motionGifTimeout);
       window.__motionGifTimeout = setTimeout(() => {
         movingImg.src = 'icon/' + q.folder + '/With-motion.png';
-      }, q.gifMs || 2000);
+      }, q.gifMs || 1500);
     }
 
     if (isCorrect) {
@@ -2110,10 +2190,36 @@ const pushPullQuestions = [
     { q: 'Arjun wants to make a swing move forward. Should he pull or push the swing?', audio: '10', correct: 'push', folder: '009', gifMs: 2000 },
   ];
 
+/* ═══════════════════════════════════════
+     PRELOAD ALL MOTION + PUSH/PULL MEDIA
+     Runs once on script load so GIFs/PNGs are
+     already cached before the user ever reaches
+     these pages — fixes slow/blank GIFs on mobile.
+  ═══════════════════════════════════════ */
+  function preloadMotionAssets() {
+    motionQuestions.forEach(q => {
+      ['With-motion.gif', 'With-motion.png', 'No-motion.png'].forEach(file => {
+        const img = new Image();
+        img.src = `icon/${q.folder}/${file}`;
+      });
+    });
+  }
+
+  function preloadPushPullAssets() {
+    pushPullQuestions.forEach(q => {
+      ['.png', '.gif'].forEach(ext => {
+        const img = new Image();
+        img.src = `icon/${q.folder}${ext}`;
+      });
+    });
+  }
+
+  preloadMotionAssets();
+  preloadPushPullAssets();
+
   function highlightPushPullWords(text) {
     return text.replace(/\b(push|pull)\b/gi, '<span class="hl-red">$1</span>');
   }
-
   let ppCurrentQ      = 0;
   let ppAnswered      = false;
 let ppCurrentAudio  = null;

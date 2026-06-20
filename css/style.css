@@ -6,6 +6,11 @@
   src: url('../icon/Hey\ Comic.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Grobold';
+  src: url('../icon/GROBOLD.ttf') format('truetype');
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -974,6 +979,7 @@ padding: 0;
 .track-boy.boy-with-box {
   left: 40px;
 }
+
 /* ── OBJECT ── */
 .track-object {
   height: clamp(22px, 9vh, 100px);
@@ -982,6 +988,15 @@ padding: 0;
   margin-left: clamp(-20px, -2.5vw, -40px);
   flex-shrink: 0;
   will-change: transform;
+}
+
+.track-object.obj-ball {
+  height: clamp(22px, 9svh, 100px);
+}
+
+.track-object.obj-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .track-object.obj-box {
@@ -1221,10 +1236,10 @@ padding: 0;
   .force-card { width: clamp(90px, 17vw, 170px); }
   .obj-btn img, .force-type-btn img { width: clamp(10px, 2.7vw, 30px); height: clamp(10px, 2.7vw, 30px); }
  
-  .force-play-card { width: clamp(70px, 11vw, 140px); }
+  .force-play-card { width: clamp(90px, 17vw, 170px); }
   .play-force-btn img { width: clamp(22px, 3.5vw, 50px); height: clamp(22px, 3.5vw, 50px); }
 
-.force-track { min-height: 30vh; }
+   .force-track { min-height: 30vh; }
 
   .track-left {
     margin-left: clamp(-15px, -3vw, -5px);
@@ -1306,8 +1321,8 @@ padding: 0;
   margin-bottom: clamp(2px, 0.4vh, 5px);
   padding: clamp(6px, 1vh, 12px) clamp(16px, 3vw, 40px);
   flex-shrink: 0;
-  width: clamp(600px, 96vw, 1500px);
-  min-height: clamp(38px, 10vh, 120px);
+  width: clamp(150px, 94vw, 1500px);
+  min-height: clamp(28px, 9vh, 120px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1347,7 +1362,9 @@ padding: 0;
   justify-content: center;
   gap: clamp(6px, 1.2vw, 14px);
 }
-
+#page-pushpull .motion-instruction .instr-row {
+  top: 22% !important;
+}
 .motion-instruction .instr-line {
   font-family: 'Comic', Arial, sans-serif;
   font-weight: 900;
@@ -1361,7 +1378,7 @@ padding: 0;
 
 .motion-cards {
   display: flex;
-  gap: clamp(10px, 4vw, 60px);
+  gap: clamp(10px, 5vw, 100px);
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -1371,8 +1388,8 @@ padding: 0;
 
 .motion-card {
   position: relative;
-  width: clamp(280px, 46vw, 780px);
-  max-width: 60%;
+  width: clamp(160px, 72vmin, 720px);
+  max-width: 46vw;
   aspect-ratio: 4 / 3;
   background: none;
   border: none;
@@ -1428,9 +1445,10 @@ padding: 0;
 }
 
 @media (max-height: 440px) and (orientation: landscape) {
-  .motion-instruction { font-size: clamp(0.5rem, 1vw, 0.7rem) !important; min-height: clamp(28px, 5vh, 44px); }
+  .motion-instruction { font-size: clamp(0.5rem, 1vw, 0.7rem) !important; min-height: clamp(18px, 5vh, 44px); }
   .motion-instruction .instr-line { font-size: clamp(0.45rem, 1.1vw, 0.7rem); }
   .motion-cards { gap: clamp(6px, 2vw, 24px); }
+  .motion-card { width: clamp(120px, 34vw, 280px); max-width: 48%; }
 }
 
 @media (max-width: 820px) and (orientation: portrait) {
@@ -1438,13 +1456,8 @@ padding: 0;
     flex-direction: column;
     gap: clamp(10px, 2vh, 24px);
   }
-  .motion-card {
-    width: clamp(220px, 70vw, 420px);
-    max-width: 90%;
-  }
   .motion-instruction .instr-line { font-size: clamp(0.6rem, 2.6vw, 1rem); }
 }
-
 
 
 
@@ -1498,7 +1511,7 @@ padding: 0;
 /* instruction text should appear above the background */
 #page-pushpull .motion-instruction {
   z-index: 3;
-  margin-top: clamp(8px, 2vh, 18px);
+  margin-top: clamp(0.1px, 0.1vh, 1px);
 }
 
 /* answer buttons should sit above the background but below the instruction */
@@ -1532,7 +1545,7 @@ padding: 0;
 }
 
 .pp-answer-btn img {
-  width: clamp(100px, 16vw, 220px);
+  width: clamp(30px, 12vw, 220px);
   height: auto;
   object-fit: contain;
   display: block;
@@ -1614,4 +1627,385 @@ padding: 0;
   -webkit-backdrop-filter: blur(4px);
   background: rgba(0, 0, 0, 0.15);
   pointer-events: none;
+}
+
+
+
+/* ════════════════════════════════════════════
+   PAGE 2B — CHARACTER SELECT
+════════════════════════════════════════════ */
+.charselect-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vh, 36px);
+  width: 100%;
+  height: 100%;
+  padding: clamp(60px, 11vh, 100px) clamp(12px, 4vw, 70px) clamp(36px, 6vh, 60px);
+}
+
+.charselect-title-wrap {
+  position: relative;
+  display: inline-block;
+  padding: clamp(10px, 2vh, 22px) clamp(28px, 6vw, 70px);
+  border-radius: clamp(40px, 6vw, 90px);
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.28) 0%,
+    rgba(180,220,255,0.14) 45%,
+    rgba(100,180,255,0.22) 100%
+  );
+  backdrop-filter: blur(18px) saturate(1.8);
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.35),
+    0 2px 8px rgba(0,0,0,0.18),
+    inset 0 2px 20px rgba(255,255,255,0.25),
+    inset 0 -2px 12px rgba(100,180,255,0.15);
+  overflow: hidden;
+}
+
+.charselect-title-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: linear-gradient(
+    180deg,
+    rgba(89, 99, 151, 0.3) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.charselect-title {
+  position: relative;
+  z-index: 1;
+  font-family: 'Grobold', 'Comic', Arial, sans-serif;
+  font-size: clamp(1rem, 3.5vw, 2.8rem);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.6), 0 0 30px rgba(0,150,255,0.4);
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateY(-30px);
+  animation: cssTitleIn 0.6s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
+  white-space: nowrap;
+}
+
+.charselect-cards {
+  display: flex;
+  gap: clamp(24px, 6vw, 100px);
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* each full card (glass + name) */
+.charselect-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2vh, 20px);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(80px);
+  transition: transform 0.18s;
+}
+
+.charselect-card:hover  { transform: translateY(0) scale(1.02); }
+.charselect-card:active { transform: translateY(0) scale(0.96); }
+.charselect-card { transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); }
+
+.charselect-card:hover .charselect-card__glass {
+  box-shadow:
+    0 18px 60px rgba(0,0,0,0.45),
+    0 4px 12px rgba(0,0,0,0.22),
+    inset 0 2px 28px rgba(255,255,255,0.30),
+    inset 0 -2px 16px rgba(100,180,255,0.20),
+    0 0 40px rgba(0,160,255,0.25);
+}
+
+.charselect-card:hover .charselect-img {
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.45)) drop-shadow(0 0 12px rgba(0,180,255,0.3));
+}
+
+.charselect-card:hover .charselect-name {
+  background: linear-gradient(
+    135deg,
+    rgba(60, 20, 140, 0.80) 0%,
+    rgba(30, 110, 230, 0.95) 100%
+  );
+  box-shadow:
+    0 6px 24px rgba(38,110,218,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.55),
+    inset 0 -1px 0 rgba(0,0,0,0.15);
+}
+
+.charselect-card:hover .charselect-img-wrap::before {
+  animation: beamPulse 1.2s ease-in-out infinite;
+  opacity: 1;
+}
+
+.charselect-card:hover .charselect-img-wrap::after {
+  animation: floorPulse 1.2s ease-in-out infinite;
+  opacity: 1;
+}
+
+/* staggered entry animations */
+#charShivam {
+  animation: cssCardIn 0.7s cubic-bezier(0.22,1,0.36,1) 0.25s forwards;
+}
+#charSiya {
+  animation: cssCardIn 0.7s cubic-bezier(0.22,1,0.36,1) 0.42s forwards;
+}
+
+#charShivam.anim-done,
+#charSiya.anim-done {
+  opacity: 1;
+  transform: translateY(0);
+  animation: none;
+  transition: transform 0.25s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease;
+}
+
+#charShivam.anim-done:hover,
+#charSiya.anim-done:hover {
+  transform: scale(1.10);
+}
+
+#charShivam.anim-done:active,
+#charSiya.anim-done:active {
+  transform: scale(0.96);
+}
+
+/* glass card box */
+.charselect-card__glass {
+  position: relative;
+  width: clamp(160px, 28vw, 340px);
+  height: clamp(200px, 42vh, 440px);
+  border-radius: clamp(18px, 2.5vw, 32px);
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.28) 0%,
+    rgba(255,255,255,0.10) 40%,
+    rgba(180,220,255,0.10) 70%,
+    rgba(100,180,255,0.18) 100%
+  );
+  backdrop-filter: blur(18px) saturate(1.8);
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  border: none;
+  box-shadow:
+    0 12px 48px rgba(0,0,0,0.38),
+    0 2px 8px rgba(0,0,0,0.18),
+    inset 0 2px 24px rgba(255,255,255,0.22),
+    inset 0 -2px 12px rgba(100,180,255,0.10);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* top gloss sweep */
+.charselect-card__glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 52%;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.32) 0%,
+    rgba(255,255,255,0.10) 60%,
+    transparent 100%
+  );
+  border-radius: clamp(18px, 2.5vw, 32px) clamp(18px, 2.5vw, 32px) 0 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* side gloss streak */
+.charselect-card__glass::after {
+  content: '';
+  position: absolute;
+  top: 6%;
+  left: 6%;
+  width: 22%;
+  height: 55%;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.38) 0%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  z-index: 2;
+  pointer-events: none;
+  filter: blur(6px);
+}
+
+/* character image wrapper — clips the rise animation */
+.charselect-img-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* blue spotlight beam from bottom */
+.charselect-img-wrap::before {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 90%;
+  background: conic-gradient(
+    from 270deg at 50% 100%,
+    transparent 60deg,
+    rgba(0, 140, 255, 0.45) 90deg,
+    rgba(0, 200, 255, 0.55) 120deg,
+    rgba(80, 220, 255, 0.60) 135deg,
+    rgba(0, 200, 255, 0.55) 150deg,
+    rgba(0, 140, 255, 0.45) 180deg,
+    transparent 210deg
+  );
+  z-index: 0;
+  pointer-events: none;
+  animation: beamPulse 2.4s ease-in-out infinite;
+  filter: blur(8px);
+}
+
+/* floor glow circle at base of beam */
+.charselect-img-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: clamp(12px, 3vh, 28px);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 180, 255, 0.75) 0%,
+    rgba(0, 140, 255, 0.40) 45%,
+    transparent 75%
+  );
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  animation: floorPulse 2.4s ease-in-out infinite;
+  filter: blur(3px);
+}
+
+@keyframes beamPulse {
+  0%, 100% { opacity: 0.75; }
+  50%       { opacity: 1; }
+}
+
+@keyframes floorPulse {
+  0%, 100% { opacity: 0.7; transform: translateX(-50%) scaleX(1); }
+  50%       { opacity: 1;   transform: translateX(-50%) scaleX(1.12); }
+}
+
+.charselect-img {
+  height: 87%;
+  width: auto;
+  object-fit: contain;
+  object-position: bottom;
+  display: block;
+  position: relative;
+  z-index: 1;
+  transform: translateY(100%);
+  animation: cssCharRise 0.9s cubic-bezier(0.22,1,0.36,1) 0.55s forwards;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
+}
+
+/* name pill — flush to top edge, slides down from outside card */
+.charselect-name {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  z-index: 4;
+  font-family: 'Grobold', 'Comic', Arial, sans-serif;
+  font-size: clamp(0.75rem, 1.8vw, 1.4rem);
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    rgba(41, 10, 92, 0.65) 0%,
+    rgba(23, 91, 194, 0.8) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: 100%;
+  text-align: center;
+  padding: clamp(5px, 1vh, 12px) 0;
+ 
+  border: none;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+box-shadow:
+    0 4px 18px rgba(38, 110, 218, 0.35),
+    inset 0 1px 0 rgba(184, 41, 41, 0.45),
+    inset 0 -1px 0 rgba(107, 86, 86, 0.15);
+  opacity: 0;
+  animation: cssNameSlideIn 0.6s cubic-bezier(0.22,1,0.36,1) 0.85s forwards;
+}
+/* gloss shine on name pill */
+.charselect-name::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  width: 84%;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.30) 0%,
+    transparent 100%
+  );
+  border-radius: 0 0 50% 50%;
+  pointer-events: none;
+}
+@keyframes cssNameSlideIn {
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ── KEYFRAMES ── */
+@keyframes cssTitleIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cssCardIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cssCharRise {
+  to { transform: translateY(0); }
+}
+
+/* responsive */
+@media (max-height: 440px) and (orientation: landscape) {
+  .charselect-card__glass {
+    width: clamp(90px, 18vw, 160px);
+    height: clamp(100px, 26vh, 180px);
+  }
+  .charselect-title { font-size: clamp(0.7rem, 2vw, 1.2rem); }
+  .charselect-name  { font-size: clamp(0.6rem, 1.5vw, 0.9rem); }
 }
