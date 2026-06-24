@@ -19,6 +19,23 @@ let infoAudio = null;
   let activeGameAudio = null;
   let celebrationAudios = [];
 
+function playStarSounds(popup) {
+    const stars = popup.querySelectorAll('.fc-star');
+    stars.forEach((star, i) => {
+      setTimeout(() => {
+        star.style.animation = 'none';
+        star.style.opacity = '0';
+        star.offsetHeight;
+        star.style.animation = 'starPopIn 0.4s cubic-bezier(0.22,1,0.36,1) forwards';
+        star.style.opacity = '1';
+        const s = new Audio('audio/star_twink.mp3');
+        s.volume = 0.20;
+        s.play().catch(() => {});
+        celebrationAudios.push(s);
+      }, i * 350);
+    });
+  }
+
   function playGameAudio(src) {
     if (activeGameAudio) { activeGameAudio.pause(); activeGameAudio.currentTime = 0; }
     activeGameAudio = new Audio(src);
@@ -60,8 +77,8 @@ let infoAudio = null;
         position: absolute;
         top: clamp(8px, 1.5vw, 16px);
         right: clamp(8px, 2.7vw, 50px);
-        width: clamp(32px, 4vw, 30px);
-        height: clamp(32px, 6vw, 48px);
+       width: clamp(48px, 6vw, 72px);
+        height: clamp(48px, 6vw, 72px);
         border-radius: 50%;
         background: none;
         border: none;
@@ -140,12 +157,14 @@ audioBtn.addEventListener('click', () => {
       box.appendChild(audioBtn);
       popup.appendChild(box);
       document.body.appendChild(popup);
-
 function restoreAllAudio() {
-        if (currentInstructionAudio) currentInstructionAudio.volume = 1;
-        if (motionCurrentAudio) motionCurrentAudio.volume = 1;
-        if (ppCurrentAudio) ppCurrentAudio.volume = 1;
-        if (activeGameAudio) activeGameAudio.volume = 1;
+        if (currentStep === 0 && currentInstructionAudio && currentInstructionAudio.paused && !currentInstructionAudio.ended) {
+          currentInstructionAudio.play().catch(() => {});
+        }
+        if (motionCurrentAudio && motionCurrentAudio.paused && !motionCurrentAudio.ended) motionCurrentAudio.play().catch(() => {});
+        if (ppCurrentAudio && ppCurrentAudio.paused && !ppCurrentAudio.ended) ppCurrentAudio.play().catch(() => {});
+        if (activeGameAudio && activeGameAudio.paused && !activeGameAudio.ended) activeGameAudio.play().catch(() => {});
+        if (currentStep > 0) setStepGuide(currentStep);
       }
 
       closeBtn.addEventListener('click', () => {
@@ -190,24 +209,21 @@ function restoreAllAudio() {
     const aImg = document.getElementById('infoPopupAudioImg');
     if (aImg) aImg.src = 'icon/audio.png';
 
-/* silence all active audios immediately when popup opens */
-    if (currentInstructionAudio) currentInstructionAudio.volume = 0;
-    if (motionCurrentAudio) motionCurrentAudio.volume = 0;
-    if (ppCurrentAudio) ppCurrentAudio.volume = 0;
-    if (activeGameAudio) activeGameAudio.volume = 0;
+/* pause all active audios immediately when popup opens */
+    if (currentInstructionAudio) { currentInstructionAudio.pause(); }
+    if (motionCurrentAudio) { motionCurrentAudio.pause(); }
+    if (ppCurrentAudio) { ppCurrentAudio.pause(); }
+    if (activeGameAudio) { activeGameAudio.pause(); }
+    clearStepTimers();
 
     /* play new audio */
     if (audioSrc) {
 
       infoAudio = new Audio(audioSrc);
       infoAudio.play().catch(() => {});
-      infoAudio.addEventListener('ended', () => {
+infoAudio.addEventListener('ended', () => {
         infoAudio = null;
-        /* restore all audios when info audio finishes */
-if (currentInstructionAudio) currentInstructionAudio.volume = 1;
-        if (motionCurrentAudio) motionCurrentAudio.volume = 1;
-        if (ppCurrentAudio) ppCurrentAudio.volume = 1;
-        if (activeGameAudio) activeGameAudio.volume = 1;
+        restoreAllAudio();
       });
     }
   }
@@ -330,9 +346,26 @@ function navigateTo(from, to) {
 
 if (playBtn)      playBtn.addEventListener('click',      () => navigateTo(pageHome, pageIndex));
   if (backBtn)      backBtn.addEventListener('click',      () => { resetForceGame(); navigateTo(pageIndex, pageHome); });
-  if (forceBackBtn) forceBackBtn.addEventListener('click', () => { resetForceGame(); navigateTo(pageForce, pageIndex); });
-if (motionBackBtn) motionBackBtn.addEventListener('click', () => { resetMotionGame(); navigateTo(pageMotion, pageIndex); });
-  if (pushpullBackBtn) pushpullBackBtn.addEventListener('click', () => { resetPushPullGame(); navigateTo(pagePushPull, pageIndex); });
+  if (forceBackBtn) forceBackBtn.addEventListener('click', () => {
+    if (currentInstructionAudio) { currentInstructionAudio.pause(); currentInstructionAudio.currentTime = 0; currentInstructionAudio = null; }
+    window.__instructionAborted = true;
+    resetForceGame();
+    navigateTo(pageForce, pageIndex);
+  });
+if (motionBackBtn) motionBackBtn.addEventListener('click', () => { 
+    resetMotionGame(); 
+    motionCardsLocked = true;
+    motionAnswered = false;
+    if (motionCurrentAudio) { motionCurrentAudio.pause(); motionCurrentAudio.currentTime = 0; motionCurrentAudio = null; }
+    navigateTo(pageMotion, pageIndex); 
+  });
+  if (pushpullBackBtn) pushpullBackBtn.addEventListener('click', () => { 
+    resetPushPullGame(); 
+    ppCardsLocked = true;
+    ppAnswered = false;
+    if (ppCurrentAudio) { ppCurrentAudio.pause(); ppCurrentAudio.currentTime = 0; ppCurrentAudio = null; }
+    navigateTo(pagePushPull, pageIndex); 
+  });
 
 document.querySelectorAll('.menu-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -520,6 +553,7 @@ let selectedCharacter = 'shivam'; // 'shivam' | 'siya'
      STEP 1 — INSTRUCTION TEXT SEQUENCE
   ═══════════════════════════════════════════════════════ */
 function runInstructionSequence(cb) {
+    window.__instructionAborted = false;
     if (!forceInstruction) { cb && cb(); return; }
 
     const lines = [
@@ -553,6 +587,7 @@ function runInstructionSequence(cb) {
       }
 
 setTimeout(() => {
+        if (window.__instructionAborted) return;
         if (line) line.classList.add('line-visible');
 
         /* play audio for this line, move to next line when it ends */
@@ -754,7 +789,7 @@ if (idleAudioInterval) {
       } else if (step === 2) {
         showPlayCard();
       }
-   }, 2000);
+   }, 1000);
   }
 
   /* called when user clicks Play in card 3 */
@@ -784,8 +819,10 @@ if (idleAudioInterval) {
 
 /* update track object */
      if (trackObject) {
+const isNewObject = !btn.__autoClick && (trackObject.style.opacity === '0' || !trackObject.classList.contains('obj-' + obj));
  trackObject.src = `icon/${obj}.png`;
   trackObject.className = 'track-object obj-' + obj;
+  trackObject.style.opacity = '1';
   if (trackBoy) {
     if (obj === 'box') {
       trackBoy.classList.add('boy-with-box');
@@ -793,9 +830,46 @@ if (idleAudioInterval) {
       trackBoy.classList.remove('boy-with-box');
     }
   }
-  const yOffset = getObjectYOffset(obj);
+const yOffset = getObjectYOffset(obj);
+  if (isNewObject && obj === 'ball') {
  trackObject.style.transition = 'none';
-  trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+  trackObject.style.transform  = `translateX(0) translateY(-180px) rotate(0deg)`;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      // drop to floor — smooth fast fall
+      trackObject.style.transition = 'transform 0.45s cubic-bezier(0.4, 0, 1, 1)';
+      trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+
+      setTimeout(() => {
+        // bounce up — gentle rise
+        trackObject.style.transition = 'transform 0.28s cubic-bezier(0.0, 0.0, 0.2, 1)';
+        trackObject.style.transform  = `translateX(0) translateY(${yOffset - 30}px) rotate(0deg)`;
+
+        setTimeout(() => {
+          // come back down smoothly
+          trackObject.style.transition = 'transform 0.22s cubic-bezier(0.4, 0, 1, 1)';
+          trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+
+          setTimeout(() => {
+            // tiny last bounce up
+            trackObject.style.transition = 'transform 0.16s cubic-bezier(0.0, 0.0, 0.2, 1)';
+            trackObject.style.transform  = `translateX(0) translateY(${yOffset - 10}px) rotate(0deg)`;
+
+            setTimeout(() => {
+              // final settle — smooth land
+              trackObject.style.transition = 'transform 0.18s cubic-bezier(0.4, 0, 1, 1)';
+              trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+   }, 160);
+          }, 220);
+        }, 280);
+      }, 450);
+    });
+  });
+} else {
+    trackObject.style.transition = 'none';
+    trackObject.style.transform  = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
+    trackObject.style.opacity = '1';
+  }
 }
 
 if (trackBoy) {
@@ -876,8 +950,8 @@ function runScenario() {
 
    usedForces[selectedObject][selectedForce] = true;
     rebuildBlocks();
-
-    const blockPos = (currentRound === 1) ? 'right' : 'center';
+const blockPos = (currentRound === 1) ? 'right' : 'center';
+    window.__currentBlockPos = blockPos;
     positionBlocks(blockPos);
     setControlsEnabled(false);
 
@@ -982,6 +1056,10 @@ const isPushObject = (selectedObject === 'trolly' || selectedObject === 'box');
     /* preload ALL frames and wait until every one is actually loaded
        (or errored) before starting the animation — fixes frames
        randomly not showing when a frame isn't cached yet. */
+/* preload kick audio so it plays instantly on the kick frame */
+const kickAudio = new Audio('audio/Football-Kick.mp3');
+    kickAudio.volume = 0.12;
+    kickAudio.load();
     let loadedCount = 0;
     const loadedImgs = new Array(frameSrcs.length);
     function startAnim() {
@@ -1011,8 +1089,9 @@ const isPushObject = (selectedObject === 'trolly' || selectedObject === 'box');
             ballLaunched = true;
             cb(frame);
           }
-        } else if (frame >= ballFrame && !ballLaunched) {
+} else if (frame >= ballFrame && !ballLaunched) {
           ballLaunched = true;
+          kickAudio.play().catch(() => {});
           cb(frame);
         }
       }, ms);
@@ -1056,10 +1135,10 @@ const isMobileLaunch = window.matchMedia('(max-height: 440px) and (orientation: 
 const targetX = isGentle
       ? (blockPos === 'center'
           ? (isPushObject
-             ? trackWidth * (isMobileLaunch ? 0.48 : 0.31)
+             ? trackWidth * (isMobileLaunch ? 0.48 : 0.33)
               : trackWidth * (isMobileLaunch ? 0.54 : 0.38))
           : trackWidth * 0.38)
-      : (blockPos === 'center' ? trackWidth * 0.48 : (isPushObject ? trackWidth * 0.70 : trackWidth * 0.80));
+     : (blockPos === 'center' ? (isPushObject ? trackWidth * 0.37 : trackWidth * 0.48) : (isPushObject ? trackWidth * 0.70 : trackWidth * 0.80));
 
     const yOffset = getObjectYOffset(selectedObject);
 if (isPushObject) {
@@ -1068,6 +1147,16 @@ if (isPushObject) {
       }
 
       if (phase === 2) {
+  /* Round 2 + box/trolly + gentle = object above pyramid */
+  if (currentRound === 2 && (selectedObject === 'box' || selectedObject === 'trolly') && selectedForce === 'gentle') {
+    if (trackObject) trackObject.style.zIndex = '20';
+    const trackRight = document.querySelector('.track-right');
+    if (trackRight) trackRight.style.zIndex = '1';
+  } else {
+    if (trackObject) trackObject.style.zIndex = '';
+    const trackRight = document.querySelector('.track-right');
+    if (trackRight) trackRight.style.zIndex = '';
+  }
         /* read current computed position to avoid any snap/jerk */
         const computedTransform = getComputedStyle(trackObject).transform;
         let currentX = 0;
@@ -1077,6 +1166,18 @@ if (isPushObject) {
             const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
             currentX = values[4] || 0;
           }
+        }
+
+        /* play box audio when box starts moving */
+  let boxAudio = null;
+if (selectedObject === 'box') {
+          boxAudio = new Audio('audio/box.mp3');
+          boxAudio.volume = 0.12;
+          boxAudio.play().catch(() => {});
+        } else if (selectedObject === 'trolly') {
+          boxAudio = new Audio('audio/Shopping-Cart 08.mp3');
+          boxAudio.volume = 0.12;
+          boxAudio.play().catch(() => {});
         }
 
         const fastDuration = isGentle ? 2600 : 1000;
@@ -1095,8 +1196,11 @@ if (isPushObject) {
           });
         });
 
-        const impactDelay = isGentle ? Math.max(100, fastDuration - 400) : Math.max(100, fastDuration - 500);
-        setTimeout(cb, impactDelay);
+      const impactDelay = isGentle ? Math.max(100, fastDuration - 400) : Math.max(100, fastDuration - 500);
+        setTimeout(() => {
+          if (boxAudio) { boxAudio.pause(); boxAudio.currentTime = 0; boxAudio = null; }
+          cb();
+        }, impactDelay);
         return;
       }
     }
@@ -1127,8 +1231,46 @@ if (isPushObject) {
      BLOCKS BREAK ANIMATION
   ═══════════════════════════════════════════════════════ */
 function animateBlocksBreak(force, cb) {
-    const blocks = blocksStack ? blocksStack.querySelectorAll('.block-img') : [];
-    if (!blocks.length) { setTimeout(cb, 400); return; }
+    const centerCombo = (window.__currentBlockPos === 'center');
+    let blockSelector = '.block-img';
+    if (centerCombo) {
+      if (selectedObject === 'ball' && force === 'gentle') {
+        blockSelector = '.block-t1, .block-s1, .block-s2';
+      } else if (selectedObject === 'ball' && force === 'strong') {
+        blockSelector = '.block-t1, .block-s1, .block-s2, .block-m1, .block-m2, .block-m3';
+      } else if (selectedObject === 'trolly' && force === 'gentle') {
+        blockSelector = '.block-t1, .block-s1, .block-s2, .block-m1, .block-m2, .block-m3';
+      } else if (selectedObject === 'trolly' && force === 'strong') {
+        blockSelector = '.block-img';
+      } else if (selectedObject === 'box' && force === 'gentle') {
+        blockSelector = '.block-t1, .block-s1, .block-s2';
+      } else if (selectedObject === 'box' && force === 'strong') {
+        blockSelector = '.block-img';
+      }
+    }
+if (!centerCombo) {
+      // RIGHT pyramid rules
+      if (force === 'gentle') {
+        blockSelector = ''; // nothing falls
+      } else {
+        // strong
+        if (selectedObject === 'ball') {
+          blockSelector = '.block-t1, .block-s1, .block-s2, .block-m1, .block-m2, .block-m3, .block-b1';
+        } else if (selectedObject === 'trolly') {
+          blockSelector = '.block-img';
+        } else if (selectedObject === 'box') {
+          blockSelector = '.block-img';
+        }
+      }
+    }
+    const blocks = blockSelector
+      ? (blocksStack ? blocksStack.querySelectorAll(blockSelector) : [])
+      : [];
+if (!blocks.length) { setTimeout(cb, 400); return; }
+
+   const pyramidAudio = new Audio('audio/ForceSimulation/pyramid.mp3');
+    pyramidAudio.volume = 0.12;
+    pyramidAudio.play().catch(() => {});
 
     const isGentle = force === 'gentle';
     const trackRect = forceTrackContent ? forceTrackContent.getBoundingClientRect() : null;
@@ -1141,7 +1283,7 @@ function animateBlocksBreak(force, cb) {
    const floorY   = trackRect ? (trackRect.bottom - blockRect.height * 2.5) - blockRect.top : 10;
 
       /* each block flies/topples in a different direction */
-      const side     = (Math.random() > 0.5 ? 1 : -1);
+      const side     = (window.__currentBlockPos === 'center') ? 1 : (Math.random() > 0.5 ? 1 : -1);
     const bs = blockRect.height; // responsive unit based on actual block size
 
 const spreadX  = isGentle
@@ -1247,9 +1389,21 @@ function showForceCompletePopup() {
       const imgWrap = document.createElement('div');
       imgWrap.className = 'fc-img-wrap';
 
-      const mainImg = document.createElement('img');
-      mainImg.src = 'icon/Simulationcomplete.png';
-      mainImg.className = 'fc-main-img';
+const mainImg = document.createElement('img');
+mainImg.src = 'icon/Simulationcomplete.png';
+mainImg.className = 'fc-main-img';
+
+const starsWrap = document.createElement('div');
+starsWrap.className = 'fc-stars-wrap';
+[0, 1, 2].forEach((i) => {
+  const star = document.createElement('img');
+  star.src = 'icon/star.png';
+  star.className = 'fc-star';
+  star.style.animationDelay = (i * 0.35) + 's';
+  starsWrap.appendChild(star);
+});
+imgWrap.appendChild(starsWrap);
+
 
       const btnRow = document.createElement('div');
       btnRow.className = 'fc-btn-row';
@@ -1292,22 +1446,40 @@ function showForceCompletePopup() {
       document.body.appendChild(popup);
     }
 
-    const confetti = popup.querySelector('.fc-confetti');
-    if (confetti) {
-      confetti.style.display = 'block';
-      confetti.src = 'icon/Sequence-01.gif?t=' + Date.now();
-      setTimeout(() => { confetti.style.display = 'none'; }, 3000);
-    }
+const confetti = popup.querySelector('.fc-confetti');
+    if (confetti) { confetti.style.display = 'none'; }
 
+const fcMainImg = popup.querySelector('.fc-main-img');
+  const fcBtnRow = popup.querySelector('.fc-btn-row');
+  if (fcMainImg) fcMainImg.style.opacity = '0';
+  if (fcBtnRow) fcBtnRow.style.opacity = '0';
+  popup.querySelectorAll('.fc-star').forEach(s => { s.style.opacity = '0'; s.style.animation = 'none'; });
+  const fcCompleteImg = new Image();
+  fcCompleteImg.src = 'icon/Simulationcomplete.png';
   popup.style.display = 'flex';
-
-    const clap = new Audio('audio/claping.mp3');
-    clap.play().catch(() => {});
-    const party = new Audio('audio/Party Popper Explode 02.wav');
-    party.play().catch(() => {});
-    celebrationAudios.push(clap, party);
+  const fcClap = new Audio('audio/claping.mp3');
+  fcClap.play().catch(() => {});
+  celebrationAudios.push(fcClap);
+  fcClap.addEventListener('ended', () => {
+    fcCompleteImg.decode ? fcCompleteImg.decode().catch(()=>{}).finally(() => {
+      if (fcMainImg) { fcMainImg.style.transition = 'opacity 0.4s ease'; fcMainImg.style.opacity = '1'; }
+      setTimeout(() => {
+        playStarSounds(popup);
+        setTimeout(() => {
+          if (fcBtnRow) { fcBtnRow.style.transition = 'opacity 0.4s ease'; fcBtnRow.style.opacity = '1'; }
+        }, 3 * 350 + 400);
+      }, 500);
+    }) : (() => {
+      if (fcMainImg) { fcMainImg.style.transition = 'opacity 0.4s ease'; fcMainImg.style.opacity = '1'; }
+      setTimeout(() => {
+        playStarSounds(popup);
+        setTimeout(() => {
+          if (fcBtnRow) { fcBtnRow.style.transition = 'opacity 0.4s ease'; fcBtnRow.style.opacity = '1'; }
+        }, 3 * 350 + 400);
+      }, 500);
+    })();
+  });
   }
-
 
   /* ═══════════════════════════════════════════════════════
      FINISH SCENARIO — RESET FOR NEXT PLAY
@@ -1352,6 +1524,8 @@ const blurOverlay1 = document.createElement('div');
     const gentleAudio = playGameAudio('audio/ForceSimulation/04.mp3');
 
 const onAudioEnd = () => {
+      isAnimating = false;
+      setControlsEnabled(true);
       simImg.style.filter = 'drop-shadow(0 0 18px rgba(0,200,255,1))';
         setTimeout(() => {
       if (simImg.parentNode) {
@@ -1359,6 +1533,10 @@ const onAudioEnd = () => {
           }
           if (blurOverlay1 && blurOverlay1.parentNode) document.body.removeChild(blurOverlay1);
 rebuildBlocks();
+          /* reset z-index here — after popup closes and blocks rebuild */
+          if (trackObject) trackObject.style.zIndex = '';
+          const trackRightReset = document.querySelector('.track-right');
+          if (trackRightReset) trackRightReset.style.zIndex = '';
           if (trackObject) {
             const yOffset = getObjectYOffset(selectedObject);
             trackObject.style.transition = 'none';
@@ -1376,7 +1554,7 @@ rebuildBlocks();
             positionBlocks('center');
             document.querySelectorAll('.obj-btn').forEach(b => { b.disabled = true; });
             showCard2();
-          } else if (bothUsedNow && currentRound === 2) {
+     } else if (bothUsedNow && currentRound === 2) {
             const obj = selectedObject;
             const objBtn = document.querySelector(`.obj-btn[data-object="${obj}"]`);
             if (objBtn) { objBtn.classList.add('btn-exhausted'); objBtn.disabled = true; objBtn.classList.remove('selected'); }
@@ -1384,8 +1562,9 @@ rebuildBlocks();
             selectedForce = null;
             document.querySelectorAll('.obj-btn:not(.btn-exhausted)').forEach(b => { b.disabled = false; });
             const nextBtn = document.querySelector('.obj-btn:not(.btn-exhausted)');
-            if (nextBtn) { nextBtn.__autoClick = true; nextBtn.click(); nextBtn.__autoClick = false; }
-            else { showForceCompletePopup(); }
+            if (!nextBtn) { showForceCompletePopup(); return; }
+            if (trackObject) { trackObject.style.opacity = '0'; }
+            showCard1();
           } else {
             positionBlocks('right');
             selectedForce = null;
@@ -1398,13 +1577,13 @@ rebuildBlocks();
       gentleAudio.addEventListener('ended', onAudioEnd);
       gentleAudio.addEventListener('error', onAudioEnd);
 
-      isAnimating = false;
-      setControlsEnabled(true);
-      return;
+  return;
     }
 
 if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'center')) {
-      const imgMap = { ball: 'sim02.png', trolly: 'sim02_2.png', box: 'sim02_3.png' };
+      const imgMap = selectedForce === 'gentle'
+        ? { ball: 'sim04_1.png', trolly: 'sim04_2.png', box: 'sim04_3.png' }
+        : { ball: 'sim02.png', trolly: 'sim02_2.png', box: 'sim02_3.png' };
     const simImg = document.createElement('img');
       simImg.src = 'icon/' + imgMap[selectedObject];
       simImg.classList.add('sim-popup-el');
@@ -1413,8 +1592,14 @@ if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'c
       blurOverlay2.className = 'sim-blur-overlay';
       document.body.appendChild(blurOverlay2);
       document.body.appendChild(simImg);
-     const resultAudio = playGameAudio(`audio/ForceSimulation/${popupAudio}.mp3`);
-      const onAudioEnd = () => {
+const gentleCenterAudioMap = { ball: 'GB', trolly: 'GC', box: 'GBox' };
+     const resolvedAudio = (selectedForce === 'gentle' && blockPos === 'center')
+        ? gentleCenterAudioMap[selectedObject]
+        : popupAudio;
+     const resultAudio = playGameAudio(`audio/ForceSimulation/${resolvedAudio}.mp3`);
+  const onAudioEnd = () => {
+        isAnimating = false;
+        setControlsEnabled(true);
         simImg.style.filter = 'drop-shadow(0 0 18px rgba(0,200,255,1))';
      setTimeout(() => {
        document.body.removeChild(simImg);
@@ -1425,11 +1610,12 @@ if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'c
             trackObject.style.transition = 'none';
             trackObject.style.transform = `translateX(0) translateY(${yOffset}px) rotate(0deg)`;
           }
-          const justFinishedRound2 = (selectedObject === null);
+const justFinishedRound2 = (selectedObject === null);
        if (justFinishedRound2) {
             const nextBtn = document.querySelector('.obj-btn:not(.btn-exhausted)');
-            if (nextBtn) { nextBtn.__autoClick = true; nextBtn.click(); nextBtn.__autoClick = false; }
-            else { showForceCompletePopup(); }
+            if (!nextBtn) { showForceCompletePopup(); return; }
+            if (trackObject) { trackObject.style.opacity = '0'; }
+            showCard1();
           } else {
             const pos = (currentRound === 1) ? 'right' : 'center';
             positionBlocks(pos);
@@ -1440,17 +1626,12 @@ if (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'c
       resultAudio.addEventListener('error', onAudioEnd);
     }
 
-    /* reset boy position silently */
+/* reset boy position silently */
   if (trackBoy) {
       trackBoy.style.transition = 'none';
       trackBoy.style.transform  = 'translateX(0)';
       trackBoy.src = selectedCharacter === 'siya' ? 'icon/Girl Kick/Final00.png' : 'icon/KICK/Final00.png';
     }
-
-    isAnimating = false;
-
-/* re-enable controls */
-    setControlsEnabled(true);
 
 /* check if blocks broke this play */
     const blocksBroke = (selectedForce === 'strong' || (selectedForce === 'gentle' && blockPos === 'center'));
@@ -1718,11 +1899,12 @@ function resetForceGame() {
 
     if (forcePlayCard) forcePlayCard.classList.remove('play-card-in');
 
- if (trackObject) {
+if (trackObject) {
       trackObject.src = 'icon/ball.png';
-trackObject.className = 'track-object obj-ball obj-hidden';
+      trackObject.className = 'track-object obj-ball obj-hidden';
       trackObject.style.transition = 'none';
       trackObject.style.transform  = '';
+      trackObject.style.opacity = '0';
     }
 
     if (trackBoy) {
@@ -1871,6 +2053,7 @@ function loadGifFrames(src, cb) {
   }
 
 let motionIntroPlayed = false;
+  let motionPageActive = false;
 
   /* ── Instruction sequence for motion ── */
   function runMotionInstructionSequence(q, onDone) {
@@ -1968,17 +2151,20 @@ if (!motionIntroPlayed) {
       }, q.gifMs || 1500);
     }
 
-    if (isCorrect) {
+if (isCorrect) {
       card.classList.add('selected');
+      showMotionFeedback(card, true);
       const rnd = Math.floor(Math.random() * 5) + 1;
       playGameAudio('audio/Extras/0' + rnd + '.mp3');
       motionAdvanceTimeout = setTimeout(() => {
         motionCurrentQ++;
         stopGif();
+        removeMotionFeedback();
         loadMotionQuestion(motionCurrentQ);
       }, 2000);
 
     } else {
+      showMotionFeedback(card, false);
       const wrongAudio = new Audio('audio/Motion/wrong-audio.mp3');
       wrongAudio.play().catch(() => {});
       wrongAudio.addEventListener('ended', () => {
@@ -1989,13 +2175,51 @@ if (!motionIntroPlayed) {
       motionWrongTimeout = setTimeout(() => {
         card.classList.remove('wrong', 'shake');
         motionAnswered = false;
+        removeMotionFeedback();
       }, 1500);
     }
   }
 
+function showMotionFeedback(card, isCorrect) {
+    removeMotionFeedback();
+    const icon = document.createElement('div');
+    icon.id = 'motionFeedbackIcon';
+    icon.textContent = isCorrect ? '✓' : '✗';
+    icon.style.cssText = `
+      position: absolute;
+      top: 8%;
+      right: 4%;
+      width: clamp(36px, 6vw, 72px);
+      height: clamp(36px, 6vw, 72px);
+      border-radius: 50%;
+      background: ${isCorrect ? 'rgba(0,180,60,0.92)' : 'rgba(220,30,30,0.92)'};
+      color: #fff;
+      font-size: clamp(20px, 4vw, 46px);
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      animation: feedbackPop 0.25s cubic-bezier(0.22,1,0.36,1) forwards;
+    `;
+    if (!document.getElementById('feedbackPopKeyframes')) {
+      const s = document.createElement('style');
+      s.id = 'feedbackPopKeyframes';
+      s.textContent = `@keyframes feedbackPop { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1; } }`;
+      document.head.appendChild(s);
+    }
+    card.appendChild(icon);
+  }
+
+  function removeMotionFeedback() {
+    const icon = document.getElementById('motionFeedbackIcon');
+    if (icon && icon.parentNode) icon.parentNode.removeChild(icon);
+  }
+
   if (motionCardA) motionCardA.addEventListener('click', () => handleMotionCardClick(motionCardA));
   if (motionCardB) motionCardB.addEventListener('click', () => handleMotionCardClick(motionCardB));
-
   /* ── Complete popup ── */
  function showMotionCompletePopup() {
     let popup = document.getElementById('motionCompletePopup');
@@ -2018,9 +2242,20 @@ if (!motionIntroPlayed) {
       const imgWrap = document.createElement('div');
       imgWrap.className = 'fc-img-wrap';
 
-      const mainImg = document.createElement('img');
-      mainImg.src = 'icon/Simulationcomplete.png';
+const mainImg = document.createElement('img');
+      mainImg.src = 'icon/MotionComplete_2.png';
       mainImg.className = 'fc-main-img';
+
+      const starsWrap = document.createElement('div');
+      starsWrap.className = 'fc-stars-wrap';
+      [0, 1, 2].forEach((i) => {
+        const star = document.createElement('img');
+        star.src = 'icon/star.png';
+        star.className = 'fc-star';
+        star.style.animationDelay = (i * 0.35) + 's';
+        starsWrap.appendChild(star);
+      });
+      imgWrap.appendChild(starsWrap);
 
       const btnRow = document.createElement('div');
       btnRow.className = 'fc-btn-row';
@@ -2062,19 +2297,44 @@ const replayBtn = document.createElement('button');
       document.body.appendChild(popup);
     }
 
-    const confetti = popup.querySelector('.fc-confetti');
-    if (confetti) {
-      confetti.style.display = 'block';
-      confetti.src = 'icon/Sequence-01.gif?t=' + Date.now();
-      setTimeout(() => { confetti.style.display = 'none'; }, 3000);
-    }
-
-popup.style.display = 'flex';
-    const clap = new Audio('audio/claping.mp3');
-    clap.play().catch(() => {});
-    const party = new Audio('audio/Party Popper Explode 02.wav');
-    party.play().catch(() => {});
-    celebrationAudios.push(clap, party);
+ const confetti = popup.querySelector('.fc-confetti');
+    if (confetti) { confetti.style.display = 'none'; }
+const mcMainImg = popup.querySelector('.fc-main-img');
+  const mcBtnRow = popup.querySelector('.fc-btn-row');
+  if (mcMainImg) mcMainImg.style.opacity = '0';
+  if (mcBtnRow) mcBtnRow.style.opacity = '0';
+  popup.querySelectorAll('.fc-star').forEach(s => { s.style.opacity = '0'; s.style.animation = 'none'; });
+  const mcCompleteImg = new Image();
+  mcCompleteImg.src = 'icon/MotionComplete_2.png';
+  popup.style.display = 'flex';
+  const mcClap = new Audio('audio/claping.mp3');
+  mcClap.play().catch(() => {});
+  celebrationAudios.push(mcClap);
+  mcClap.addEventListener('ended', () => {
+    mcCompleteImg.decode ? mcCompleteImg.decode().catch(()=>{}).finally(() => {
+      if (mcMainImg) { mcMainImg.style.transition = 'opacity 0.4s ease'; mcMainImg.style.opacity = '1'; }
+      setTimeout(() => {
+        playStarSounds(popup);
+        const party = new Audio('audio/Party Popper Explode 02.wav');
+        party.play().catch(() => {});
+        celebrationAudios.push(party);
+        setTimeout(() => {
+          if (mcBtnRow) { mcBtnRow.style.transition = 'opacity 0.4s ease'; mcBtnRow.style.opacity = '1'; }
+        }, 3 * 350 + 400);
+      }, 500);
+    }) : (() => {
+      if (mcMainImg) { mcMainImg.style.transition = 'opacity 0.4s ease'; mcMainImg.style.opacity = '1'; }
+      setTimeout(() => {
+        playStarSounds(popup);
+        const party = new Audio('audio/Party Popper Explode 02.wav');
+        party.play().catch(() => {});
+        celebrationAudios.push(party);
+        setTimeout(() => {
+          if (mcBtnRow) { mcBtnRow.style.transition = 'opacity 0.4s ease'; mcBtnRow.style.opacity = '1'; }
+        }, 3 * 350 + 400);
+      }, 500);
+    })();
+  });
   }
 
   /* ── Entry point: called when Motion menu btn clicked ── */
@@ -2224,7 +2484,8 @@ const pushPullQuestions = [
   let ppAnswered      = false;
 let ppCurrentAudio  = null;
   let ppCardsLocked   = true;
-  let ppIntroPlayed   = false;
+let ppIntroPlayed   = false;
+  let ppPageActive    = false;
   let ppAdvanceTimeout = null;
   let ppWrongTimeout   = null;
 
@@ -2286,8 +2547,9 @@ function ppPlaySceneGif() {
 
     if (ppCurrentAudio) { ppCurrentAudio.pause(); ppCurrentAudio = null; }
 
-    function showQuestionLine() {
+ function showQuestionLine() {
       setTimeout(() => {
+        if (!ppPageActive) return;
         if (line3) line3.classList.add('line-visible');
         if (audio2Btn) audio2Btn.classList.add('audio-visible');
 
@@ -2316,14 +2578,17 @@ const a1 = playGameAudio('audio/Pushandpull/01.mp3');
         showQuestionLine();
       };
 
-      setTimeout(() => {
+setTimeout(() => {
+        if (!ppPageActive) return;
         if (line1) line1.classList.add('line-visible');
         if (audio1Btn) audio1Btn.classList.add('audio-visible');
 
   setTimeout(() => {
+          if (!ppPageActive) return;
           if (line1) line1.classList.remove('line-visible');
 
           setTimeout(() => {
+            if (!ppPageActive) return;
             if (line2) line2.classList.add('line-visible');
             if (audio1Btn) audio1Btn.classList.add('audio-visible');
 
@@ -2406,10 +2671,20 @@ function showPushPullCompletePopup() {
       const imgWrap = document.createElement('div');
       imgWrap.className = 'fc-img-wrap';
 
-      const mainImg = document.createElement('img');
-      mainImg.src = 'icon/Simulationcomplete.png';
+     const mainImg = document.createElement('img');
+      mainImg.src = 'icon/PushPullComplete_2.png';
       mainImg.className = 'fc-main-img';
 
+      const starsWrap = document.createElement('div');
+      starsWrap.className = 'fc-stars-wrap';
+      [0, 1, 2].forEach((i) => {
+        const star = document.createElement('img');
+        star.src = 'icon/star.png';
+        star.className = 'fc-star';
+        star.style.animationDelay = (i * 0.35) + 's';
+        starsWrap.appendChild(star);
+      });
+      imgWrap.appendChild(starsWrap);
       const btnRow = document.createElement('div');
       btnRow.className = 'fc-btn-row';
 
@@ -2450,21 +2725,47 @@ function showPushPullCompletePopup() {
       document.body.appendChild(popup);
     }
 
-    const confetti = popup.querySelector('.fc-confetti');
-    if (confetti) {
-      confetti.style.display = 'block';
-      confetti.src = 'icon/Sequence-01.gif?t=' + Date.now();
-      setTimeout(() => { confetti.style.display = 'none'; }, 3000);
-    }
-
-popup.style.display = 'flex';
-    const clap = new Audio('audio/claping.mp3');
-    clap.play().catch(() => {});
-    const party = new Audio('audio/Party Popper Explode 02.wav');
-    party.play().catch(() => {});
-    celebrationAudios.push(clap, party);
+const confetti = popup.querySelector('.fc-confetti');
+    if (confetti) { confetti.style.display = 'none'; }
+const ppMainImg = popup.querySelector('.fc-main-img');
+  const ppBtnRowEl = popup.querySelector('.fc-btn-row');
+  if (ppMainImg) ppMainImg.style.opacity = '0';
+  if (ppBtnRowEl) ppBtnRowEl.style.opacity = '0';
+  popup.querySelectorAll('.fc-star').forEach(s => { s.style.opacity = '0'; s.style.animation = 'none'; });
+  const ppCompleteImg = new Image();
+  ppCompleteImg.src = 'icon/PushPullComplete_2.png';
+  popup.style.display = 'flex';
+  const ppClap = new Audio('audio/claping.mp3');
+  ppClap.play().catch(() => {});
+  celebrationAudios.push(ppClap);
+  ppClap.addEventListener('ended', () => {
+    ppCompleteImg.decode ? ppCompleteImg.decode().catch(()=>{}).finally(() => {
+      if (ppMainImg) { ppMainImg.style.transition = 'opacity 0.4s ease'; ppMainImg.style.opacity = '1'; }
+      setTimeout(() => {
+        playStarSounds(popup);
+        const party = new Audio('audio/Party Popper Explode 02.wav');
+        party.play().catch(() => {});
+        celebrationAudios.push(party);
+        setTimeout(() => {
+          if (ppBtnRowEl) { ppBtnRowEl.style.transition = 'opacity 0.4s ease'; ppBtnRowEl.style.opacity = '1'; }
+        }, 3 * 350 + 400);
+      }, 500);
+    }) : (() => {
+      if (ppMainImg) { ppMainImg.style.transition = 'opacity 0.4s ease'; ppMainImg.style.opacity = '1'; }
+      setTimeout(() => {
+        playStarSounds(popup);
+        const party = new Audio('audio/Party Popper Explode 02.wav');
+        party.play().catch(() => {});
+        celebrationAudios.push(party);
+        setTimeout(() => {
+          if (ppBtnRowEl) { ppBtnRowEl.style.transition = 'opacity 0.4s ease'; ppBtnRowEl.style.opacity = '1'; }
+        }, 3 * 350 + 400);
+      }, 500);
+    })();
+  });
   }
 function startPushPullGame() {
+    ppPageActive = true;
     ppCurrentQ = 0;
     ppAnswered = false;
     ppCardsLocked = true;
@@ -2474,6 +2775,7 @@ function startPushPullGame() {
   }
 
 function resetPushPullGame() {
+    ppPageActive = false;
     ppAnswered = false;
     ppCardsLocked = true;
     ppIntroPlayed = false;
@@ -2489,14 +2791,16 @@ function resetPushPullGame() {
      nothing from page 3/4/5 keeps playing or fires later on a
      different page. Fixes the overlap — works the same on iOS.
   ═══════════════════════════════════════════════════════ */
-  function stopAllGameAudio() {
+function stopAllGameAudio() {
     [activeGameAudio, idleGameAudio, currentInstructionAudio, motionCurrentAudio, ppCurrentAudio, clapSound]
       .forEach(a => { if (a) { a.pause(); a.currentTime = 0; } });
 
     celebrationAudios.forEach(a => { if (a) { a.pause(); a.currentTime = 0; } });
     celebrationAudios = [];
 
+    activeGameAudio = null;
     idleGameAudio = null;
+    currentInstructionAudio = null;
     motionCurrentAudio = null;
     ppCurrentAudio = null;
 

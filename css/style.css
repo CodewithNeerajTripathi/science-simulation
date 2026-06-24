@@ -143,7 +143,7 @@ video.bg-img {
 }
 
 .logo-img {
-  height: clamp(30px, 4.5vw, 58px);
+  height: clamp(30px, 4.5vw, 68px);
   width: auto;
   object-fit: contain;
 }
@@ -199,11 +199,11 @@ video.bg-img {
 }
 
 .title-img {
-  width: clamp(200px, 38vw, 750px);
+  width: clamp(200px, 43vw, 850px);
   max-width: 88vw;
   height: auto;
   object-fit: contain;
-  margin-bottom: -10%;
+  margin-bottom: -13%;
   margin-top: -10%;
 }
 .title-wrap {
@@ -481,7 +481,7 @@ overflow: visible;
   overflow: visible;
   background-color: #ffffff;
   background-image: url('../icon/Track1.png');
-  background-size: 92% 100%;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -605,6 +605,9 @@ margin-top: clamp(1px, 0.4vh, 10px);
 }
 .obj-btn:hover,
 .force-type-btn:hover  { transform: scale(1.05); }
+
+.spotlight-dim .obj-btn:hover,
+.spotlight-dim .force-type-btn:hover { transform: none; }
 .obj-btn:active,
 .force-type-btn:active { transform: scale(0.92); }
 
@@ -882,12 +885,18 @@ margin-top: clamp(1px, 0.4vh, 10px);
   transition: filter 0.35s ease, transform 0.35s ease, opacity 0.35s ease;
 }
 
+.spotlight-dim { pointer-events: none; cursor: default; }
 .spotlight-dim {
   filter: blur(4px);
   opacity: 0.5;
   pointer-events: none;
 }
-
+.spotlight-dim .obj-btn,
+.spotlight-dim .force-type-btn,
+.spotlight-dim .play-force-btn {
+  pointer-events: none;
+  cursor: default;
+}
 .spotlight-active {
   filter: none;
   opacity: 1;
@@ -924,8 +933,7 @@ margin-top: clamp(1px, 0.4vh, 10px);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-padding: 0;
-  padding-right: clamp(20px, 4vw, 80px);
+  padding: 0;
   padding-bottom: clamp(25px, 15vh, 150px);
   overflow: visible;
 }
@@ -934,6 +942,8 @@ padding: 0;
   flex-direction: row;
   align-items: flex-end;
   gap: 0;
+  position: relative;
+  z-index: 6;
 }
 
 /* ── PLAY CARD (inside track, bottom-left) ── */
@@ -988,6 +998,17 @@ padding: 0;
   margin-left: clamp(-20px, -2.5vw, -40px);
   flex-shrink: 0;
   will-change: transform;
+  position: relative;
+  z-index: 5;
+}
+
+.track-object.obj-box,
+.track-object.obj-trolly {
+  z-index: 5;
+}
+
+.track-object.obj-ball {
+  z-index: 12;
 }
 
 .track-object.obj-ball {
@@ -1018,8 +1039,9 @@ padding: 0;
   align-items: flex-end;
   margin-bottom: clamp(10px, 4vh, 50px);
   flex-shrink: 0;
+  position: relative;
+  z-index: 8;
 }
-
 .blocks-stack {
   position: relative;
   width: clamp(60px, 12vw, 300px);
@@ -1069,14 +1091,14 @@ padding: 0;
 /* all individual offsets */
 .block-t1  { position: relative; top: calc(var(--bs) * 0.0); left: calc(var(--bs) * -0.57); }
 .block-s1  { position: relative;top: calc(var(--bs) * 1.0); left: calc(var(--bs) * -0.20); }
-.block-s2  { position: relative; top: calc(var(--bs) * 0.0); left: calc(var(--bs) * -1.48); }
+.block-s2  { position: relative; top: calc(var(--bs) * 0.0); left: calc(var(--bs) * -1.48); z-index: 4; }
 .block-m1  { position: relative; top: calc(var(--bs) * 0.32); left: calc(var(--bs) * -0.27); }
 .block-m2  { position: relative; top: calc(var(--bs) * 0.65); left: calc(var(--bs) * -1.10); }
-.block-m3  { position: relative; top: calc(var(--bs) * 0.87); left: calc(var(--bs) * -1.95); }
-.block-b1  { position: relative; top: 0; left: 0; }
+.block-m3  { position: relative; top: calc(var(--bs) * 0.87); left: calc(var(--bs) * -1.95); z-index: 4; }
+.block-b1  { position: relative; top: 0; left: 0; z-index: -1; }
 .block-b2  { position: relative; top: calc(var(--bs) * 0.20); left: calc(var(--bs) * -0.87); }
-.block-b3  { position: relative; top: calc(var(--bs) * 0.43); left: calc(var(--bs) * -1.75); }
-.block-b4  { position: relative; top: calc(var(--bs) * 0.69); left: calc(var(--bs) * -2.58); }
+.block-b3  { position: relative; top: calc(var(--bs) * 0.43); left: calc(var(--bs) * -1.75); z-index: 4; }
+.block-b4  { position: relative; top: calc(var(--bs) * 0.69); left: calc(var(--bs) * -2.58); z-index: 4; }
 /* ── COPYRIGHT on page-force ── */
 #page-force .copyright {
   color: rgba(30,30,60,0.65);
@@ -1626,9 +1648,8 @@ padding: 0;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   background: rgba(0, 0, 0, 0.15);
-  pointer-events: none;
+  pointer-events: all;
 }
-
 
 
 /* ════════════════════════════════════════════
@@ -1686,7 +1707,7 @@ padding: 0;
 .charselect-title {
   position: relative;
   z-index: 1;
-  font-family: 'Grobold', 'Comic', Arial, sans-serif;
+  font-family: 'Comic', Arial, sans-serif;
   font-size: clamp(1rem, 3.5vw, 2.8rem);
   font-weight: 900;
   color: #fff;
@@ -1861,6 +1882,8 @@ padding: 0;
   overflow: hidden;
 }
 
+
+
 /* blue spotlight beam from bottom */
 .charselect-img-wrap::before {
   content: '';
@@ -1886,6 +1909,8 @@ padding: 0;
   filter: blur(8px);
 }
 
+
+
 /* floor glow circle at base of beam */
 .charselect-img-wrap::after {
   content: '';
@@ -1908,6 +1933,8 @@ padding: 0;
   filter: blur(3px);
 }
 
+
+
 @keyframes beamPulse {
   0%, 100% { opacity: 0.75; }
   50%       { opacity: 1; }
@@ -1917,6 +1944,7 @@ padding: 0;
   0%, 100% { opacity: 0.7; transform: translateX(-50%) scaleX(1); }
   50%       { opacity: 1;   transform: translateX(-50%) scaleX(1.12); }
 }
+
 
 .charselect-img {
   height: 87%;
@@ -1931,6 +1959,9 @@ padding: 0;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
 }
 
+
+
+
 /* name pill — flush to top edge, slides down from outside card */
 .charselect-name {
   position: absolute;
@@ -1938,9 +1969,9 @@ padding: 0;
   left: 50%;
   transform: translateX(-50%) translateY(-100%);
   z-index: 4;
-  font-family: 'Grobold', 'Comic', Arial, sans-serif;
+  font-family: 'Comic', Arial, sans-serif;
   font-size: clamp(0.75rem, 1.8vw, 1.4rem);
-  font-weight: 900;
+  font-weight: 500;
   color: #ffffff;
   background: linear-gradient(
     135deg,
@@ -1964,6 +1995,10 @@ box-shadow:
   opacity: 0;
   animation: cssNameSlideIn 0.6s cubic-bezier(0.22,1,0.36,1) 0.85s forwards;
 }
+
+
+
+
 /* gloss shine on name pill */
 .charselect-name::before {
   content: '';
@@ -1980,6 +2015,9 @@ box-shadow:
   border-radius: 0 0 50% 50%;
   pointer-events: none;
 }
+
+
+
 @keyframes cssNameSlideIn {
   to {
     opacity: 1;
@@ -2008,4 +2046,31 @@ box-shadow:
   }
   .charselect-title { font-size: clamp(0.7rem, 2vw, 1.2rem); }
   .charselect-name  { font-size: clamp(0.6rem, 1.5vw, 0.9rem); }
+}
+
+
+
+
+
+.fc-stars-wrap {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: clamp(8px, 2vw, 24px);
+  z-index: 3;
+}
+
+.fc-star {
+  width: clamp(30px, 5vw, 80px);
+  height: auto;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.4);
+  animation: starPopIn 0.4s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes starPopIn {
+  to { opacity: 1; transform: scale(1); }
 }
